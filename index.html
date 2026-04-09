@@ -46,6 +46,29 @@
       padding: 0 14px 48px;
     }
 
+    /* ── ABOUT LINK ── */
+    .about-link {
+      display: inline-block;
+      margin-top: 14px;
+      color: var(--g);
+      font-size: 0.68rem;
+      letter-spacing: 3px;
+      text-decoration: none;
+      border: 1px solid rgba(0,255,65,0.5);
+      padding: 8px 20px;
+      box-shadow: 0 0 12px rgba(0,255,65,0.25), inset 0 0 8px rgba(0,255,65,0.05);
+      animation: about-glow 2.4s ease-in-out infinite;
+      transition: all 0.2s;
+    }
+    .about-link:hover, .about-link:active {
+      background: rgba(0,255,65,0.1);
+      box-shadow: 0 0 28px rgba(0,255,65,0.6), inset 0 0 14px rgba(0,255,65,0.1);
+    }
+    @keyframes about-glow {
+      0%,100% { box-shadow: 0 0 8px rgba(0,255,65,0.2), inset 0 0 6px rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.35); }
+      50%      { box-shadow: 0 0 22px rgba(0,255,65,0.55), inset 0 0 12px rgba(0,255,65,0.08); border-color: rgba(0,255,65,0.8); }
+    }
+
     /* ── HEADER ── */
     .site-header {
       text-align: center;
@@ -923,7 +946,7 @@
     <span class="logo-icon">⛓</span>
     <h1 class="site-title">株クラ X Network</h1>
     <p class="site-sub">〜 信頼でつながる株クラコミュニティ 〜</p>
-    <a href="about.html" style="display:inline-block;margin-top:12px;color:#336633;font-size:0.65rem;letter-spacing:2px;text-decoration:none;border:1px solid #1a3a1a;padding:5px 14px;transition:all 0.2s" onmouseover="this.style.color='#00ff41';this.style.borderColor='#00ff41'" onmouseout="this.style.color='#336633';this.style.borderColor='#1a3a1a'">仕組みを見る →</a>
+    <a href="about.html" class="about-link">仕組みを見る →</a>
   </header>
 
   <!-- LOADING -->
