@@ -8,6 +8,11 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* スマホのみ全体を少しだけ読みやすく（ブラウザデフォルト16px → 17px） */
+    @media (max-width: 480px) {
+      html { font-size: 17px; }
+    }
+
     :root {
       --g: #00ff41;
       --g2: rgba(0,255,65,0.15);
