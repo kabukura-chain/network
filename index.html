@@ -442,7 +442,7 @@
   <!-- HEADER -->
   <header class="site-header">
     <span class="logo-icon">⛓</span>
-    <h1 class="site-title">リアル人間株クラチェーン</h1>
+    <h1 class="site-title">株クラNetwork</h1>
     <p class="site-sub">〜 信頼でつながる株クラコミュニティ 〜</p>
   </header>
 
@@ -501,12 +501,12 @@
   </div>
 
   <!-- FORM -->
-  <p class="sec">// チェーンに参加する</p>
+  <p class="sec">// 株クラNetworkチェーンに参加する</p>
   <div class="form-card">
     <h2>[ あなたのおすすめを登録（1〜3人）]</h2>
     <div class="field">
       <label>あなたの X（Twitter）@ハンドル（@あり・なしどちらでもOK）</label>
-      <input type="text" id="f-me" placeholder="@むらやん または むらやん" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="f-me" placeholder="@あなたのハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="divider">─── おすすめ（1〜3人、@あり・なしどちらでもOK）───</div>
     <div class="field">
@@ -673,7 +673,7 @@ let sim, svgEl, gEl;
 // Color palette per node
 const nodeColor = (d) => d.reg ? '#00ff41' : '#00aaff';
 const avatarUrl  = (h) => `https://unavatar.io/x/${encodeURIComponent(h.replace(/^@/, ''))}`;
-const fallbackUrl = (h) => `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(h)}&backgroundColor=0a1a0a&pixelSize=3`;
+const fallbackUrl = (h) => `https://api.dicebear.com/7.x/pixel-art/png?seed=${encodeURIComponent(h)}&backgroundColor=0d1f0d&size=64`;
 
 function initSVG() {
   const wrap = document.getElementById('net-wrap');
