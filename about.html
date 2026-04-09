@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>株クラ X Network — 仕組みを見る</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    @media (max-width: 480px) { html { font-size: 17px; } }
+    :root { --g: #00ff41; --g2: rgba(0,255,65,0.15); --g3: rgba(0,255,65,0.05); --b: #00e5ff; --r: #ff4400; --bg: #000a00; }
+
+    body { background: var(--bg); color: var(--g); font-family: 'Courier New','MS Gothic',monospace; min-height: 100vh; overflow-x: hidden; }
+    #matrix-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.13; }
+    main { position: relative; z-index: 1; max-width: 660px; margin: 0 auto; padding: 0 16px 60px; }
+
+    /* ── BACK ── */
+    .back-link { display: inline-block; color: #336633; font-size: 0.7rem; letter-spacing: 2px; text-decoration: none; padding: 16px 0 0; transition: color 0.2s; }
+    .back-link:hover { color: var(--g); }
+
+    /* ── HERO ── */
+    .hero { text-align: center; padding: 36px 0 32px; border-bottom: 1px solid rgba(0,255,65,0.12); margin-bottom: 40px; }
+    .hero-badge { display: inline-block; border: 1px solid rgba(0,255,65,0.25); color: #557755; font-size: 0.62rem; letter-spacing: 3px; padding: 5px 16px; margin-bottom: 22px; }
+    .hero-title { font-size: clamp(1.5rem, 8vw, 2.6rem); font-weight: bold; line-height: 1.3; letter-spacing: 3px; margin-bottom: 18px; }
+    .hero-title .accent { color: #fff; text-shadow: 0 0 40px var(--g), 0 0 80px rgba(0,255,65,0.3); }
+    .hero-sub { color: #669966; font-size: 0.8rem; line-height: 2; letter-spacing: 0.5px; }
+    .hero-sub strong { color: var(--g); }
+
+    /* ── SECTION ── */
+    .section { margin: 44px 0; opacity: 0; transform: translateY(28px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .section.visible { opacity: 1; transform: translateY(0); }
+    .sec-label { font-size: 0.62rem; color: #335533; letter-spacing: 4px; margin-bottom: 6px; }
+    .sec-title { font-size: clamp(1rem, 5vw, 1.3rem); font-weight: bold; color: var(--g); text-shadow: 0 0 20px rgba(0,255,65,0.35); margin-bottom: 16px; letter-spacing: 2px; line-height: 1.4; }
+    .sec-body { color: #99cc99; font-size: 0.78rem; line-height: 2; }
+    .sec-body strong { color: var(--g); }
+
+    /* ── COUNTER ── */
+    .counter-wrap { text-align: center; padding: 36px 20px; border: 1px solid rgba(0,255,65,0.2); background: var(--g3); margin: 20px 0; position: relative; overflow: hidden; }
+    .counter-wrap::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,255,65,0.06) 0%, transparent 70%); pointer-events: none; }
+    .counter-num { font-size: clamp(3.5rem, 20vw, 7rem); font-weight: bold; color: var(--g); text-shadow: 0 0 50px var(--g), 0 0 100px rgba(0,255,65,0.3); line-height: 1; letter-spacing: -3px; }
+    .counter-unit { font-size: 0.82rem; color: #669966; letter-spacing: 6px; margin-top: 10px; }
+    .counter-note { font-size: 0.68rem; color: #446644; letter-spacing: 1px; margin-top: 14px; line-height: 1.8; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box { border-left: 3px solid var(--g); padding: 14px 16px; background: rgba(0,255,65,0.04); margin: 16px 0; font-size: 0.76rem; color: #99cc99; line-height: 1.9; }
+    .highlight-box strong { color: var(--g); }
+    .warn-box { border-left: 3px solid var(--r); padding: 14px 16px; background: rgba(255,68,0,0.04); margin: 16px 0; font-size: 0.76rem; color: #cc9988; line-height: 1.9; }
+    .warn-box strong { color: var(--r); }
+
+    /* ── CHAIN SVG ── */
+    .chain-svg-wrap { background: rgba(0,255,65,0.02); border: 1px solid rgba(0,255,65,0.1); padding: 16px 8px 8px; margin: 20px 0; overflow: hidden; }
+
+    /* ── TRUST BARS ── */
+    .trust-cards { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+    .trust-row { display: flex; align-items: center; gap: 10px; }
+    .trust-label { font-size: 0.66rem; color: #669966; letter-spacing: 1px; min-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trust-bar-wrap { flex: 1; background: rgba(0,255,65,0.04); border: 1px solid rgba(0,255,65,0.1); height: 30px; position: relative; overflow: hidden; }
+    .trust-bar { height: 100%; background: linear-gradient(90deg, #002200, var(--g)); width: 0; transition: width 1.4s cubic-bezier(0.25,0.8,0.25,1); display: flex; align-items: center; padding-left: 10px; min-width: 0; }
+    .trust-bar span { font-size: 0.62rem; color: #000; font-weight: bold; letter-spacing: 1px; white-space: nowrap; }
+    .trust-count { font-size: 0.8rem; font-weight: bold; min-width: 44px; text-align: right; white-space: nowrap; }
+
+    /* ── CONVERGENCE SVG ── */
+    .conv-wrap { margin: 20px 0; padding: 16px 8px; background: rgba(0,255,65,0.02); border: 1px solid rgba(0,255,65,0.1); }
+
+    /* ── REAL NUMBERS TABLE ── */
+    .num-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.72rem; }
+    .num-table th { color: #557755; border-bottom: 1px solid #1a3a1a; padding: 8px 10px; text-align: left; letter-spacing: 2px; }
+    .num-table td { color: #99cc99; border-bottom: 1px solid #001500; padding: 9px 10px; }
+    .num-table td.hi { color: var(--g); font-weight: bold; }
+    .num-table tr:last-child td { border-bottom: 2px solid rgba(0,255,65,0.3); color: var(--g); font-weight: bold; font-size: 0.82rem; }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .step-item { display: flex; gap: 16px; padding: 14px 16px; border: 1px solid rgba(0,255,65,0.12); background: var(--g3); align-items: flex-start; }
+    .step-num { font-size: 1.4rem; font-weight: bold; color: var(--g); text-shadow: 0 0 12px var(--g); min-width: 32px; line-height: 1.2; }
+    .step-text { font-size: 0.76rem; color: #99cc99; line-height: 1.8; }
+    .step-text strong { color: var(--g); }
+
+    /* ── CTA ── */
+    .cta-wrap { text-align: center; padding: 44px 20px; border: 1px solid rgba(0,255,65,0.25); background: var(--g3); margin-top: 48px; position: relative; overflow: hidden; }
+    .cta-wrap::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,255,65,0.07) 0%, transparent 70%); pointer-events: none; }
+    .cta-title { font-size: 1.1rem; color: var(--g); letter-spacing: 4px; margin-bottom: 12px; text-shadow: 0 0 20px var(--g); position: relative; }
+    .cta-sub { font-size: 0.72rem; color: #669966; letter-spacing: 1px; margin-bottom: 28px; line-height: 1.9; position: relative; }
+    .cta-btn { display: inline-block; padding: 16px 44px; background: var(--g); color: #000; font-family: inherit; font-size: 0.88rem; font-weight: bold; letter-spacing: 3px; text-decoration: none; transition: all 0.25s; box-shadow: 0 0 30px rgba(0,255,65,0.4); position: relative; }
+    .cta-btn:hover { box-shadow: 0 0 60px rgba(0,255,65,0.7); transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 24px 0; font-size: 0.58rem; color: #1a3a1a; letter-spacing: 2px; border-top: 1px solid #001a00; margin-top: 20px; line-height: 2; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pulse-glow { 0%,100% { text-shadow: 0 0 50px var(--g), 0 0 100px rgba(0,255,65,0.3); } 50% { text-shadow: 0 0 70px var(--g), 0 0 140px rgba(0,255,65,0.5); } }
+    .counter-num { animation: pulse-glow 2.5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<main>
+  <a href="index.html" class="back-link">← ネットワーク図に戻る</a>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">// 株クラ X Network — 仕組みを見る</div>
+    <h1 class="hero-title">
+      本物の株クラだけが持てる<br>
+      <span class="accent">招待コード</span>
+    </h1>
+    <p class="hero-sub">
+      招待制・限定コード・信頼の連鎖。<br>
+      フォロワー数でも自己申告でもない、<br>
+      <strong>リアルな信頼度の可視化</strong>がここにある。
+    </p>
+  </div>
+
+  <!-- 01: 1000枚限定 -->
+  <div class="section">
+    <p class="sec-label">// 01 — SCARCITY</p>
+    <h2 class="sec-title">招待コードは全部で<br>1,000枚しかない</h2>
+    <div class="counter-wrap">
+      <div class="counter-num" id="counter">0</div>
+      <div class="counter-unit">枚 限 定</div>
+      <div class="counter-note">
+        このネットワークに参加できる人数は最大1,000人。<br>
+        コードを持っていない人は、どこからも登録できない。
+      </div>
+    </div>
+    <p class="sec-body">
+      招待コードは信頼できる人だけに手渡しで渡されます。<br>
+      コードを持っているということは、<strong>誰かに信頼されている</strong>ということ。<br>
+      それがこのネットワークの唯一の入場資格です。
+    </p>
+    <div class="highlight-box">
+      💡 コードはDMで一対一で手渡されます。SNSで公開されたコードは無効化されます。信頼している相手にだけ渡してください。
+    </div>
+  </div>
+
+  <!-- 02: チェーン構造 -->
+  <div class="section">
+    <p class="sec-label">// 02 — CHAIN</p>
+    <h2 class="sec-title">信頼はバトンのように<br>連鎖していく</h2>
+    <p class="sec-body" style="margin-bottom:18px">
+      コードを受け取って登録すると、あなたにも<strong>招待コードが3枚</strong>届きます。<br>
+      信頼できる株クラ仲間に渡して、チェーンをつなげてください。
+    </p>
+    <div class="chain-svg-wrap">
+      <svg id="chain-svg" width="100%" viewBox="0 0 560 300" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <p class="sec-body" style="margin-top:14px">
+      登録した人は<strong>緑のノード</strong>として表示されます。<br>
+      推薦されたけどまだ未登録の人は<strong style="color:#00aaff">青のノード</strong>。<br>
+      招待コードが届いていつでも緑に変わることができます。
+    </p>
+  </div>
+
+  <!-- 03: 信頼度 -->
+  <div class="section">
+    <p class="sec-label">// 03 — TRUST SCORE</p>
+    <h2 class="sec-title">矢印が集まるほど<br>信頼度が上がる</h2>
+    <p class="sec-body" style="margin-bottom:18px">
+      同じアカウントを<strong>複数の人が推薦</strong>すると、ネットワーク図に<br>
+      複数の矢印が集中します。これが「信頼度」の正体です。
+    </p>
+    <div class="conv-wrap">
+      <svg id="conv-svg" width="100%" viewBox="0 0 560 220" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="trust-cards" id="trust-cards">
+      <div class="trust-row">
+        <div class="trust-label" style="color:#336633">@初登録</div>
+        <div class="trust-bar-wrap"><div class="trust-bar" data-w="12"><span>推薦 1人</span></div></div>
+        <div class="trust-count" style="color:#336633">→×1</div>
+      </div>
+      <div class="trust-row">
+        <div class="trust-label">@kabu_san</div>
+        <div class="trust-bar-wrap"><div class="trust-bar" data-w="35"><span>推薦 3人</span></div></div>
+        <div class="trust-count" style="color:#669966">→×3</div>
+      </div>
+      <div class="trust-row">
+        <div class="trust-label">@trader_x</div>
+        <div class="trust-bar-wrap"><div class="trust-bar" data-w="62"><span>推薦 7人</span></div></div>
+        <div class="trust-count" style="color:#99dd99">→×7</div>
+      </div>
+      <div class="trust-row">
+        <div class="trust-label" style="color:var(--g)">@legend ⭐</div>
+        <div class="trust-bar-wrap">
+          <div class="trust-bar" data-w="100" style="background:linear-gradient(90deg,#002200,#00ff41)"><span>推薦 15人</span></div>
+        </div>
+        <div class="trust-count" style="color:var(--g);text-shadow:0 0 10px var(--g)">→×15</div>
+      </div>
+    </div>
+    <p class="sec-body" style="margin-top:18px">
+      フォロワー数でも、バッジでも、自己申告でもない。<br>
+      <strong>信頼している人たちが実名で指名した回数</strong>だけが信頼度になる。<br>
+      それが株クラ X Network の評価軸です。
+    </p>
+  </div>
+
+  <!-- 04: 実際の上限 -->
+  <div class="section">
+    <p class="sec-label">// 04 — REAL NUMBERS</p>
+    <h2 class="sec-title">上限1,000でも<br>実際の参加人数はもっと少ない</h2>
+    <div class="warn-box">
+      AさんとBさんが同じ<strong>@Cさん</strong>を推薦した場合、<br>
+      Cさんが使うコードは<strong>1枚だけ</strong>。もう1枚は余る。<br><br>
+      つまり<strong>人気アカウントに矢印が集まるほど、コードの消費が減り、<br>
+      上限1,000よりさらに少ない人数</strong>でネットワークが完成する。
+    </div>
+    <table class="num-table">
+      <tr><th>段</th><th>理論上限</th><th>現実予測（消化率50%）</th></tr>
+      <tr><td>1段目</td><td>最初の招待組</td><td class="hi">〜35人</td></tr>
+      <tr><td>2段目</td><td>×3</td><td class="hi">〜80人</td></tr>
+      <tr><td>3段目</td><td>×3</td><td class="hi">〜150人</td></tr>
+      <tr><td>4段目</td><td>×3</td><td class="hi">〜200人</td></tr>
+      <tr><td>合計</td><td>最大1,000人</td><td>実質 400〜600人</td></tr>
+    </table>
+    <p class="sec-body">
+      400〜600人という規模は<strong>信頼の密度が最も高い</strong>サイズ感です。<br>
+      大きすぎず、薄まらず。本物だけが集まる濃いコミュニティ。
+    </p>
+  </div>
+
+  <!-- 05: 参加の流れ -->
+  <div class="section">
+    <p class="sec-label">// 05 — HOW TO JOIN</p>
+    <h2 class="sec-title">参加までの流れ</h2>
+    <div class="steps">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <div class="step-text">
+          <strong>招待コードを受け取る</strong><br>
+          すでにネットワークに参加している株クラ仲間から<br>
+          招待コード（KBK-XXXX形式）をDMで受け取る
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <div class="step-text">
+          <strong>ハンドルと推薦を登録</strong><br>
+          招待コード・あなたの@ハンドル・<br>
+          信頼できる株クラ仲間を1〜3人入力して登録
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <div class="step-text">
+          <strong>あなたの招待コードが3枚届く</strong><br>
+          登録完了と同時に次の招待コードが3枚発行される。<br>
+          推薦した仲間にDMで渡してバトンを繋ぐ
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">04</div>
+        <div class="step-text">
+          <strong>ネットワーク図に緑ノードで追加される</strong><br>
+          推薦した人への矢印が伸び、チェーンが広がる。<br>
+          多くの人から推薦されるほど矢印が集まり、信頼度が上がる
+        </div>
+      </div>
+    </div>
+    <div class="highlight-box" style="margin-top:18px">
+      ⚠ 招待コードのない方はどこからも登録できません。参加したい方はすでにネットワーク内にいる株クラ仲間にお声がけください。
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap section">
+    <div class="cta-title">ネットワークを見る</div>
+    <p class="cta-sub">
+      今この瞬間も、信頼でつながる<br>
+      株クラたちのリアルな相関図が広がっている。
+    </p>
+    <a href="index.html" class="cta-btn">▶ ネットワーク図を開く</a>
+  </div>
+
+  <footer>
+    株クラ X Network — 信頼でつながる株クラコミュニティ<br>
+    招待制 · 限定1,000コード · リアル人間株クラチェーン
+  </footer>
+</main>
+
+<script>
+/* ── Matrix rain ── */
+(function(){
+  const cv = document.getElementById('matrix-canvas');
+  const ctx = cv.getContext('2d');
+  const CHARS = 'アイウエオカキクケコ株損益配当信頼チェーン0123456789₿¥$@';
+  const FS = 13;
+  let cols = [];
+  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; cols=Array(Math.floor(cv.width/FS)).fill(1); }
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(()=>{
+    ctx.fillStyle='rgba(0,10,0,0.05)'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.font=`${FS}px monospace`;
+    cols.forEach((y,i)=>{
+      const c=CHARS[Math.floor(Math.random()*CHARS.length)];
+      ctx.fillStyle='#aaffaa'; ctx.fillText(c,i*FS,y*FS);
+      ctx.fillStyle='#00ff41';
+      if(y>1) ctx.fillText(CHARS[Math.floor(Math.random()*CHARS.length)],i*FS,(y-1)*FS);
+      if(y*FS>cv.height&&Math.random()>0.975) cols[i]=0;
+      cols[i]+=0.45;
+    });
+  },55);
+})();
+
+/* ── IntersectionObserver ── */
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.classList.add('visible');
+    if(e.target.querySelector('#counter')) startCounter();
+    const bars = e.target.querySelectorAll('.trust-bar');
+    if(bars.length) setTimeout(()=>startBars(bars), 200);
+    if(e.target.querySelector('#conv-svg')) drawConv();
+    observer.unobserve(e.target);
+  });
+},{threshold:0.15});
+document.querySelectorAll('.section').forEach(s=>observer.observe(s));
+
+/* ── Counter ── */
+let counterDone=false;
+function startCounter(){
+  if(counterDone) return; counterDone=true;
+  const el=document.getElementById('counter');
+  const dur=2200, target=1000, start=Date.now();
+  (function tick(){
+    const t=Math.min((Date.now()-start)/dur,1);
+    const e=1-Math.pow(1-t,3);
+    el.textContent=Math.floor(e*target).toLocaleString();
+    if(t<1) requestAnimationFrame(tick);
+    else el.textContent=target.toLocaleString();
+  })();
+}
+
+/* ── Trust bars ── */
+function startBars(bars){
+  bars.forEach((b,i)=>setTimeout(()=>{ b.style.width=b.dataset.w+'%'; },i*250));
+}
+
+/* ── Chain SVG ── */
+(function(){
+  const svg=document.getElementById('chain-svg');
+  if(!svg) return;
+  const nodes=[
+    {x:280,y:38,label:'管理者',color:'#ff4400',r:18,sub:''},
+    {x:120,y:110,label:'Aさん',color:'#00ff41',r:14,sub:''},
+    {x:280,y:110,label:'Bさん',color:'#00ff41',r:14,sub:''},
+    {x:440,y:110,label:'Cさん',color:'#00ff41',r:14,sub:''},
+    {x:50, y:190,label:'D',color:'#00aaff',r:10,sub:''},
+    {x:120,y:190,label:'E',color:'#00aaff',r:10,sub:''},
+    {x:190,y:190,label:'F',color:'#00aaff',r:10,sub:''},
+    {x:260,y:190,label:'G',color:'#00aaff',r:10,sub:''},
+    {x:330,y:190,label:'H',color:'#00aaff',r:10,sub:''},
+    {x:400,y:190,label:'I',color:'#00aaff',r:10,sub:''},
+    {x:470,y:190,label:'J',color:'#00aaff',r:10,sub:''},
+    {x:50, y:260,label:'…',color:'#004433',r:6,sub:''},
+    {x:120,y:260,label:'…',color:'#004433',r:6,sub:''},
+    {x:260,y:260,label:'…',color:'#004433',r:6,sub:''},
+    {x:400,y:260,label:'…',color:'#004433',r:6,sub:''},
+    {x:470,y:260,label:'…',color:'#004433',r:6,sub:''},
+  ];
+  const edges=[[0,1],[0,2],[0,3],[1,4],[1,5],[1,6],[2,7],[2,8],[3,9],[3,10],[4,11],[5,12],[7,13],[9,14],[10,15]];
+  let h='<defs>';
+  h+='<filter id="cg"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  h+='<filter id="cr"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  h+='<marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="rgba(0,255,65,0.35)"/></marker>';
+  h+='</defs>';
+  edges.forEach(([s,t])=>{
+    const sn=nodes[s],tn=nodes[t];
+    h+=`<line x1="${sn.x}" y1="${sn.y}" x2="${tn.x}" y2="${tn.y}" stroke="rgba(0,255,65,0.22)" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr)"><animate attributeName="stroke-dashoffset" from="0" to="-8" dur="1.3s" repeatCount="indefinite"/></line>`;
+  });
+  nodes.forEach((n,i)=>{
+    const filt=n.color==='#ff4400'?'cr':n.r>=12?'cg':'';
+    const op=n.color==='#004433'?0.35:1;
+    h+=`<g opacity="${op}">
+      <circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${n.color}18" stroke="${n.color}" stroke-width="1.5" ${filt?`filter="url(#${filt})"`:''}/>
+      ${n.label!=='…'&&n.r>=10?`<text x="${n.x}" y="${n.y+n.r+13}" text-anchor="middle" font-family="Courier New,monospace" font-size="${n.r>=14?10:9}" fill="${n.color}" opacity="0.9">${n.label}</text>`:''}
+      ${n.label==='…'?`<text x="${n.x}" y="${n.y+4}" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="${n.color}">…</text>`:''}
+    </g>`;
+  });
+  // Legend
+  const leg=[['#ff4400','管理者'],['#00ff41','登録者'],['#00aaff','推薦のみ']];
+  leg.forEach(([c,l],i)=>{
+    h+=`<rect x="${10+i*100}" y="10" width="10" height="10" fill="${c}22" stroke="${c}" stroke-width="1.5"/>`;
+    h+=`<text x="${26+i*100}" y="20" font-family="Courier New,monospace" font-size="9" fill="${c}">${l}</text>`;
+  });
+  svg.innerHTML=h;
+})();
+
+/* ── Convergence SVG ── */
+let convDone=false;
+function drawConv(){
+  if(convDone) return; convDone=true;
+  const svg=document.getElementById('conv-svg');
+  if(!svg) return;
+  const center={x:280,y:120};
+  const sources=[
+    {x:60, y:40, label:'@kabu_A'},
+    {x:160,y:20, label:'@trader_B'},
+    {x:280,y:30, label:'@invest_C'},
+    {x:400,y:20, label:'@stock_D'},
+    {x:500,y:40, label:'@fund_E'},
+    {x:40, y:140,label:'@long_F'},
+    {x:520,y:140,label:'@short_G'},
+    {x:80, y:210,label:'@bull_H'},
+    {x:480,y:210,label:'@bear_I'},
+  ];
+  let h='<defs>';
+  h+='<filter id="gc2"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  h+='<marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="rgba(0,255,65,0.5)"/></marker>';
+  h+='</defs>';
+  sources.forEach((s,i)=>{
+    const dx=center.x-s.x, dy=center.y-s.y;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const ex=center.x-dx/len*22, ey=center.y-dy/len*22;
+    h+=`<line x1="${s.x}" y1="${s.y}" x2="${ex}" y2="${ey}" stroke="rgba(0,255,65,0.35)" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr2)" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${i*0.12}s" fill="freeze"/>
+      <animate attributeName="stroke-dashoffset" from="0" to="-8" dur="1.2s" repeatCount="indefinite"/>
+    </line>`;
+    h+=`<circle cx="${s.x}" cy="${s.y}" r="9" fill="#00ff4118" stroke="#00ff41" stroke-width="1" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${i*0.12}s" fill="freeze"/>
+    </circle>`;
+    h+=`<text x="${s.x}" y="${s.y+20}" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="#669966" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="${i*0.12}s" fill="freeze"/>
+      ${s.label}
+    </text>`;
+  });
+  // Center node (big, glowing)
+  h+=`<circle cx="${center.x}" cy="${center.y}" r="32" fill="rgba(0,255,65,0.08)" stroke="rgba(0,255,65,0.2)" stroke-width="1">
+    <animate attributeName="r" values="30;36;30" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+  </circle>`;
+  h+=`<circle cx="${center.x}" cy="${center.y}" r="22" fill="#00ff4122" stroke="#00ff41" stroke-width="2" filter="url(#gc2)"/>`;
+  h+=`<text x="${center.x}" y="${center.y-4}" text-anchor="middle" font-family="Courier New,monospace" font-size="9" font-weight="bold" fill="#00ff41">@legend</text>`;
+  h+=`<text x="${center.x}" y="${center.y+10}" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="#669966">推薦 9人</text>`;
+  // Label
+  h+=`<text x="${center.x}" y="205" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#669966" letter-spacing="2">矢印が集まる = 信頼度が高い</text>`;
+  svg.innerHTML=h;
+}
+</script>
+</body>
+</html>
