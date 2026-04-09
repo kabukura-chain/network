@@ -473,6 +473,10 @@
       <span class="how-num">04</span>
       <span class="how-text"><span class="hi2">緑のノード</span>＝登録者、<span style="color:#00aaff">青のノード</span>＝推薦されたアカウント。同じ人が2回登録はできない</span>
     </div>
+    <div class="how-item">
+      <span class="how-num">05</span>
+      <span class="how-text"><span class="hi2">ノード数</span>＝ネットワーク上に存在するアカウントの総数（登録者＋推薦されたアカウント）／<span class="hi2">コネクション</span>＝アカウント同士のつながりの総数</span>
+    </div>
   </div>
 
   <!-- STATS -->
@@ -489,6 +493,11 @@
     <svg id="net-svg"></svg>
     <div id="tooltip"></div>
     <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="note-card">
+    <p>📷 アイコンはX（Twitter）から自動取得されますが、アカウントの設定や状況により取得できない場合があります。その際は代替アイコンが表示されます。</p>
   </div>
 
   <!-- FORM -->
@@ -554,10 +563,6 @@
     <button class="report-btn" onclick="addReport()">⚠ 通報する</button>
     <div class="report-list" id="report-list"></div>
     <div class="ban-list" id="ban-list"></div>
-  </div>
-
-  <div class="note-card">
-    <p>📷 アイコンはX（Twitter）から自動取得されますが、アカウントの設定や状況により取得できない場合があります。その際は代替アイコンが表示されます。</p>
   </div>
 
   <footer>
