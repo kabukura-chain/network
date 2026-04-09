@@ -967,7 +967,7 @@ function render() {
       .on('end',   (e, d) => {
         if (!e.active) sim.alphaTarget(0);
         d.fx = null; d.fy = null;
-        if (!dragMoved) {
+        if (!dragMoved && !adminMode) {
           window.open(`https://x.com/${d.handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
         }
       }))
@@ -1036,14 +1036,25 @@ function render() {
     nodeG.filter(d => d.reg).each(function(d) {
       const btn = d3.select(this).append('g')
         .attr('class', 'del-btn')
-        .attr('transform', `translate(${R - 2}, ${-(R - 2)})`)
+        .attr('transform', `translate(${R + 8}, ${-(R + 8)})`)
         .style('cursor', 'pointer');
-      btn.append('circle').attr('r', 10).attr('fill', '#cc0000').attr('stroke', '#000').attr('stroke-width', 1.5);
+      // 外枠（タップ領域を広く）
+      btn.append('circle').attr('r', 13).attr('fill', '#000').attr('opacity', 0.01);
+      // 赤ボタン
+      btn.append('circle').attr('r', 10).attr('fill', '#dd1111').attr('stroke', '#fff').attr('stroke-width', 1.5)
+        .attr('filter', 'url(#glow-b)');
       btn.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-        .attr('fill', '#fff').attr('font-size', '13px').attr('pointer-events', 'none').text('✕');
+        .attr('fill', '#fff').attr('font-size', '14px').attr('font-weight', 'bold')
+        .attr('pointer-events', 'none').text('✕');
+      // click と touchend 両方に対応、伝播を完全ブロック
+      btn.on('pointerdown', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+      });
       btn.on('click', function(event) {
         event.stopPropagation();
-        if (confirm(`@${d.handle} をネットワークから削除しますか？`)) deleteBlock(d.id);
+        event.preventDefault();
+        if (confirm(`@${d.handle} を削除しますか？`)) deleteBlock(d.id);
       });
     });
   }
