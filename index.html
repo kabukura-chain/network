@@ -605,7 +605,7 @@
 
   <!-- INFO -->
   <div class="info-card">
-    <span class="hi">「株やってるやつはX（Twitter）やってないとかモグリ！」</span><br>
+    <span class="hi">「株やってるやつはX（Twitter）やってないとかバーチャ！」</span><br>
     株クラ界隈ではX（Twitter）は必須ツール。でも初心者には誰をフォローすればいいかわからない。<br>
     <span class="hi">BOT・詐欺師・情報商材屋・AIゾンビ</span>が山ほどいる中、
     信頼できる仲間だけがリアル人間株クラチェーンとしてつながるネットワーク。
@@ -1255,12 +1255,13 @@ function exitAdminMode() {
   render();
 }
 function deleteBlock(id) {
-  if (!DB_REF) return;
   DB.blocks = DB.blocks.filter(b => b.id !== id);
   DB.blocks.forEach(b => { b.recs = b.recs.filter(r => r !== id); });
   if (DB.reports && DB.reports[id]) delete DB.reports[id];
   save(DB);
+  render();
   renderReports();
+  toast(`@${id} を削除しました`);
 }
 
 /* ================================================================
