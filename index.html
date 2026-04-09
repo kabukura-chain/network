@@ -396,6 +396,19 @@
       line-height: 2;
     }
 
+    /* ── LOADING ── */
+    .loading-bar {
+      text-align: center;
+      padding: 12px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--b);
+      border: 1px solid rgba(0,180,255,0.2);
+      margin: 10px 0;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.4; } }
+
     /* ── HOW TO USE ── */
     .how-grid {
       display: flex;
@@ -478,6 +491,9 @@
       <span class="how-text"><span class="hi2">ノード数</span>＝ネットワーク上に存在するアカウントの総数（登録者＋推薦されたアカウント）／<span class="hi2">コネクション</span>＝アカウント同士のつながりの総数</span>
     </div>
   </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="loading-bar">⬛ Firebaseに接続中...</div>
 
   <!-- STATS -->
   <p class="sec">// NETWORK STATUS</p>
@@ -573,6 +589,8 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
 /* ================================================================
@@ -611,36 +629,48 @@
 })();
 
 /* ================================================================
+   FIREBASE CONFIG
+   ※ Firebaseコンソールからコピーした設定をここに貼り付け
+================================================================ */
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+/* ================================================================
    DATA
 ================================================================ */
-const KEY = 'kabu_net_v3';
-
 const REPORT_THRESHOLD = 5;
+let DB_REF = null;
 
 function seed() {
   return {
     reports: {},
     banned: [],
     blocks: [
-      { id: 'cadillac600',    handle: 'cadillac600',    recs: ['tesuta001', 'AbaneChan', 'cissan_9984'],    ts: Date.now() - 172800000 }
+      { id: 'cadillac600', handle: 'cadillac600', recs: ['tesuta001', 'AbaneChan', 'cissan_9984'], ts: Date.now() - 172800000 }
     ]
   };
 }
 
-function load() {
-  try {
-    const d = JSON.parse(localStorage.getItem(KEY));
-    if (d && d.blocks) {
-      if (!d.reports) d.reports = {};
-      if (!d.banned)  d.banned  = [];
-      return d;
-    }
-  } catch (e) {}
-  return seed();
+function normalize(data) {
+  if (!data.reports) data.reports = {};
+  if (!data.banned)  data.banned  = [];
+  return data;
 }
-function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
 
-let DB = load();
+function save(d) {
+  if (DB_REF) {
+    DB_REF.set(d).catch(e => console.error('Firebase save error:', e));
+  }
+}
+
+let DB = seed();
 
 function toGraph(blocks) {
   const nm = new Map();
@@ -987,7 +1017,45 @@ function renderReports() {
 /* ================================================================
    INIT
 ================================================================ */
-window.addEventListener('DOMContentLoaded', () => { initSVG(); renderReports(); });
+window.addEventListener('DOMContentLoaded', async () => {
+  const loading = document.getElementById('loading');
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    DB_REF = firebase.database().ref('network');
+
+    // 初回データ取得
+    const snap = await DB_REF.once('value');
+    const existing = snap.val();
+
+    if (!existing || !existing.blocks) {
+      // データが空なら初期データを書き込む
+      DB = seed();
+      await DB_REF.set(DB);
+    } else {
+      DB = normalize(existing);
+    }
+
+    loading.style.display = 'none';
+    initSVG();
+    renderReports();
+
+    // リアルタイム同期（誰かが登録・通報したら全員に即反映）
+    DB_REF.on('value', snap => {
+      const data = snap.val();
+      if (data && data.blocks) {
+        DB = normalize(data);
+        render();
+        renderReports();
+      }
+    });
+
+  } catch (e) {
+    console.error('Firebase error:', e);
+    loading.textContent = '⚠ 接続エラー。設定を確認してください。';
+    loading.style.color = '#ff4400';
+  }
+});
 window.addEventListener('resize', () => {
   if (!svgEl) return;
   const W = document.getElementById('net-wrap').clientWidth;
