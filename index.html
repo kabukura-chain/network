@@ -368,6 +368,68 @@
       color: #669966;
     }
 
+    /* ── ADMIN ── */
+    .admin-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 400;
+      background: rgba(180,0,0,0.92);
+      color: #fff;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Courier New', monospace;
+    }
+    .admin-exit-btn {
+      background: transparent;
+      border: 1px solid #fff;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.68rem;
+      padding: 4px 12px;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
+    .admin-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,8,0,0.88);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .admin-box {
+      background: #000a00;
+      border: 1px solid #ff4400;
+      box-shadow: 0 0 30px rgba(255,68,0,0.2);
+      padding: 24px 20px;
+      max-width: 360px;
+      width: 100%;
+    }
+    .admin-box h2 {
+      color: #ff4400;
+      font-size: 0.82rem;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+    .admin-trigger-btn {
+      background: transparent;
+      border: none;
+      color: #1a3a1a;
+      font-family: inherit;
+      font-size: 0.58rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin-top: 8px;
+      padding: 4px 8px;
+    }
+    .admin-trigger-btn:hover { color: #335533; }
+
     /* ── SHARE MODAL ── */
     .share-modal {
       position: fixed;
@@ -665,9 +727,33 @@
 
   <footer>
     リアル人間株クラチェーン — 信頼でつながる株クラコミュニティ<br>
-    本物の株クラ民だけがつながるリアル人間ネットワーク ― デモ版
+    本物の株クラ民だけがつながるリアル人間ネットワーク ― デモ版<br>
+    <button class="admin-trigger-btn" onclick="openAdminLogin()">⚙ 管理者</button>
   </footer>
 </main>
+
+<!-- ADMIN BANNER -->
+<div id="admin-banner" style="display:none">
+  <div class="admin-banner">
+    ⚙ 管理者モード &nbsp;—&nbsp; アイコンの <strong>✕</strong> をタップして削除
+    <button onclick="exitAdminMode()" class="admin-exit-btn">終了</button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div id="admin-modal" class="admin-modal" style="display:none">
+  <div class="admin-box">
+    <h2>[ 管理者ログイン ]</h2>
+    <div class="field">
+      <label>パスワード</label>
+      <input type="password" id="admin-pass-input" placeholder="••••••••"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') submitAdminLogin()">
+    </div>
+    <button class="submit-btn" onclick="submitAdminLogin()">ログイン</button>
+    <button class="share-close" onclick="closeAdminLogin()" style="margin-top:8px">キャンセル</button>
+  </div>
+</div>
 
 <!-- SHARE MODAL -->
 <div id="share-modal" class="share-modal" style="display:none">
@@ -742,7 +828,9 @@ const FIREBASE_CONFIG = {
    DATA
 ================================================================ */
 const REPORT_THRESHOLD = 5;
+const ADMIN_PASS = 'murayan-admin-2026'; // ← ここでパスワードを変更できます
 let DB_REF = null;
+let adminMode = false;
 
 function seed() {
   return {
@@ -943,6 +1031,23 @@ function render() {
       return '@' + (h.length > 11 ? h.slice(0, 10) + '…' : h);
     });
 
+  // 管理者モード：削除ボタン
+  if (adminMode) {
+    nodeG.filter(d => d.reg).each(function(d) {
+      const btn = d3.select(this).append('g')
+        .attr('class', 'del-btn')
+        .attr('transform', `translate(${R - 2}, ${-(R - 2)})`)
+        .style('cursor', 'pointer');
+      btn.append('circle').attr('r', 10).attr('fill', '#cc0000').attr('stroke', '#000').attr('stroke-width', 1.5);
+      btn.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('fill', '#fff').attr('font-size', '13px').attr('pointer-events', 'none').text('✕');
+      btn.on('click', function(event) {
+        event.stopPropagation();
+        if (confirm(`@${d.handle} をネットワークから削除しますか？`)) deleteBlock(d.id);
+      });
+    });
+  }
+
   // Pulsing ring animation
   (function pulse() {
     ng.selectAll('.nd circle:first-child')
@@ -1108,6 +1213,43 @@ function renderReports() {
     banEl.innerHTML = `<h3>// 削除済みアカウント</h3>` +
       DB.banned.map(h => `<span class="ban-item">@${h}</span>`).join('');
   }
+}
+
+/* ================================================================
+   ADMIN
+================================================================ */
+function openAdminLogin() {
+  document.getElementById('admin-modal').style.display = 'flex';
+  document.getElementById('admin-pass-input').value = '';
+  setTimeout(() => document.getElementById('admin-pass-input').focus(), 100);
+}
+function closeAdminLogin() {
+  document.getElementById('admin-modal').style.display = 'none';
+}
+function submitAdminLogin() {
+  const val = document.getElementById('admin-pass-input').value;
+  if (val === ADMIN_PASS) {
+    adminMode = true;
+    closeAdminLogin();
+    document.getElementById('admin-banner').style.display = 'block';
+    render();
+  } else {
+    document.getElementById('admin-pass-input').style.borderColor = '#ff4400';
+    setTimeout(() => document.getElementById('admin-pass-input').style.borderColor = '', 1000);
+  }
+}
+function exitAdminMode() {
+  adminMode = false;
+  document.getElementById('admin-banner').style.display = 'none';
+  render();
+}
+function deleteBlock(id) {
+  if (!DB_REF) return;
+  DB.blocks = DB.blocks.filter(b => b.id !== id);
+  DB.blocks.forEach(b => { b.recs = b.recs.filter(r => r !== id); });
+  if (DB.reports && DB.reports[id]) delete DB.reports[id];
+  save(DB);
+  renderReports();
 }
 
 /* ================================================================
