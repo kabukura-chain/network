@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>株クラ Twitter Network — 信頼の連鎖</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g: #00ff41;
+      --g2: rgba(0,255,65,0.15);
+      --g3: rgba(0,255,65,0.05);
+      --b: #00e5ff;
+      --r: #ff4400;
+      --bg: #000a00;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--g);
+      font-family: 'Courier New', 'MS Gothic', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.18;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 14px 48px;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      text-align: center;
+      padding: 28px 0 20px;
+      border-bottom: 1px solid rgba(0,255,65,0.25);
+      margin-bottom: 20px;
+    }
+    .logo-icon {
+      font-size: 2rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .site-title {
+      font-size: clamp(1.5rem, 7vw, 2.2rem);
+      letter-spacing: 6px;
+      color: var(--g);
+      text-shadow: 0 0 20px var(--g), 0 0 50px var(--g);
+      animation: titlepulse 3s ease-in-out infinite;
+    }
+    @keyframes titlepulse {
+      0%,100% { text-shadow: 0 0 15px var(--g), 0 0 30px var(--g); }
+      50%      { text-shadow: 0 0 30px var(--g), 0 0 70px var(--g), 0 0 100px var(--g); }
+    }
+    .site-sub {
+      color: var(--b);
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      margin-top: 8px;
+      opacity: 0.85;
+    }
+
+    /* ── SECTION TITLE ── */
+    .sec {
+      font-size: 0.62rem;
+      letter-spacing: 4px;
+      color: var(--b);
+      margin: 22px 0 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(0,180,255,0.2);
+    }
+
+    /* ── INFO CARD ── */
+    .info-card {
+      background: var(--g3);
+      border: 1px solid rgba(0,255,65,0.2);
+      border-left: 3px solid var(--g);
+      padding: 14px 16px;
+      font-size: 0.76rem;
+      line-height: 1.9;
+      color: #99dd99;
+    }
+    .info-card .hi { color: var(--g); font-weight: bold; }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex;
+      gap: 0;
+      margin: 10px 0;
+      border: 1px solid rgba(0,255,65,0.15);
+    }
+    .stat {
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px;
+      border-right: 1px solid rgba(0,255,65,0.15);
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+      color: #669966;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val {
+      display: block;
+      font-size: 1.4rem;
+      color: var(--g);
+      font-weight: bold;
+      line-height: 1.3;
+      text-shadow: 0 0 10px var(--g);
+    }
+
+    /* ── NETWORK ── */
+    .net-wrap {
+      position: relative;
+      width: 100%;
+      background: rgba(0,5,0,0.75);
+      border: 1px solid rgba(0,255,65,0.2);
+      overflow: hidden;
+    }
+    #net-svg { display: block; width: 100%; }
+    .net-hint {
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      font-size: 0.55rem;
+      color: rgba(0,255,65,0.35);
+      pointer-events: none;
+      letter-spacing: 1px;
+    }
+    #tooltip {
+      position: absolute;
+      background: rgba(0,8,0,0.95);
+      border: 1px solid var(--g);
+      color: var(--g);
+      padding: 8px 12px;
+      font-size: 0.68rem;
+      line-height: 1.6;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.15s;
+      max-width: 190px;
+      white-space: nowrap;
+    }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--g3);
+      border: 1px solid rgba(0,255,65,0.2);
+      padding: 18px 16px;
+      margin: 10px 0;
+    }
+    .form-card h2 {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: var(--b);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(0,180,255,0.2);
+    }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 0.6rem;
+      color: #77aa77;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(0,255,65,0.2);
+      border-bottom: 1px solid rgba(0,255,65,0.4);
+      color: var(--g);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus {
+      border-color: var(--g);
+      box-shadow: 0 0 10px rgba(0,255,65,0.2);
+    }
+    .field input::placeholder { color: #2a4a2a; }
+    .divider {
+      text-align: center;
+      font-size: 0.58rem;
+      color: #2a4a2a;
+      letter-spacing: 2px;
+      margin: 10px 0;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--g);
+      color: var(--g);
+      font-family: inherit;
+      font-size: 0.82rem;
+      letter-spacing: 4px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: all 0.2s;
+    }
+    .submit-btn:hover, .submit-btn:active {
+      background: var(--g);
+      color: #000;
+      box-shadow: 0 0 24px var(--g);
+    }
+
+    /* ── WARNING ── */
+    .warn-card {
+      border: 1px solid rgba(255,68,0,0.4);
+      border-left: 3px solid var(--r);
+      padding: 14px 16px;
+      margin: 10px 0;
+      font-size: 0.72rem;
+      line-height: 1.8;
+    }
+    .warn-card h3 {
+      color: var(--r);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      font-size: 0.72rem;
+    }
+    .warn-card p { color: #ff8855; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      padding: 11px 22px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(.25,.8,.25,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px 0;
+      font-size: 0.58rem;
+      color: #1a3a1a;
+      letter-spacing: 2px;
+      border-top: 1px solid #001a00;
+      margin-top: 20px;
+      line-height: 2;
+    }
+
+    /* ── D3 link animation ── */
+    .link-line {
+      stroke-dasharray: 6 4;
+      animation: flow 1.2s linear infinite;
+    }
+    @keyframes flow {
+      to { stroke-dashoffset: -10; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<main>
+  <!-- HEADER -->
+  <header class="site-header">
+    <span class="logo-icon">⛓</span>
+    <h1 class="site-title">株クラ NETWORK</h1>
+    <p class="site-sub">〜 信頼の連鎖 / TRUST CHAIN 〜</p>
+  </header>
+
+  <!-- INFO -->
+  <div class="info-card">
+    <span class="hi">「株やってるやつはTwitterやってないとかモグリ！」</span><br>
+    株クラ界隈ではTwitter（X）は必須ツール。でも初心者には誰をフォローすればいいかわからない。<br>
+    <span class="hi">BOT・詐欺師・情報商材屋・AIゾンビ</span>が山ほどいる中、
+    信頼できる仲間だけがブロックチェーンのようにつながるネットワーク。
+  </div>
+
+  <!-- STATS -->
+  <p class="sec">// NETWORK STATUS</p>
+  <div class="stats">
+    <div class="stat"><span class="stat-val" id="cnt-nodes">0</span>ノード数</div>
+    <div class="stat"><span class="stat-val" id="cnt-links">0</span>コネクション</div>
+    <div class="stat"><span class="stat-val" id="cnt-blocks">0</span>ブロック数</div>
+  </div>
+
+  <!-- NETWORK -->
+  <p class="sec">// BLOCKCHAIN NETWORK</p>
+  <div class="net-wrap" id="net-wrap">
+    <svg id="net-svg"></svg>
+    <div id="tooltip"></div>
+    <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
+  </div>
+
+  <!-- FORM -->
+  <p class="sec">// ブロックチェーンに参加する</p>
+  <div class="form-card">
+    <h2>[ あなたのおすすめ3人を登録 ]</h2>
+    <div class="field">
+      <label>あなたの Twitter @ハンドル</label>
+      <input type="text" id="f-me" placeholder="@むらやん" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="divider">─── おすすめ3人（最低1人）───</div>
+    <div class="field">
+      <label>おすすめ 1人目</label>
+      <input type="text" id="f-r1" placeholder="@kabu_san_A" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>おすすめ 2人目</label>
+      <input type="text" id="f-r2" placeholder="@sakimono_san_B" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>おすすめ 3人目</label>
+      <input type="text" id="f-r3" placeholder="@bit_san_C" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="submit-btn" onclick="addBlock()">ブロックチェーンに追加する</button>
+  </div>
+
+  <!-- WARNING -->
+  <div class="warn-card">
+    <h3>⚠ 排除対象</h3>
+    <p>BOT・詐欺師・情報商材屋・AIインプゾンビは紹介しないでください。このネットワークの価値は参加者の信頼で守られています。本物だと確信できる人だけを紹介してください。</p>
+  </div>
+
+  <footer>
+    株クラ Twitter Network — Powered by TRUST &amp; BLOCKCHAIN CONCEPT<br>
+    ブロックチェーン概念による信頼ネットワーク ― デモ版
+  </footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+/* ================================================================
+   MATRIX RAIN
+================================================================ */
+(function () {
+  const cv = document.getElementById('matrix-canvas');
+  const ctx = cv.getContext('2d');
+  const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01株式円ドル上昇下落';
+  const FS = 13;
+  let cols = [];
+
+  function resize() {
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+    cols = Array.from({ length: Math.floor(cv.width / FS) }, () => Math.random() * -80);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  setInterval(() => {
+    ctx.fillStyle = 'rgba(0,8,0,0.05)';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.font = FS + 'px monospace';
+    for (let i = 0; i < cols.length; i++) {
+      const c = CHARS[Math.floor(Math.random() * CHARS.length)];
+      const x = i * FS, y = cols[i] * FS;
+      ctx.fillStyle = '#aaffaa';
+      ctx.fillText(c, x, y);
+      ctx.fillStyle = '#00ff41';
+      if (y > FS) ctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], x, y - FS);
+      if (y > cv.height && Math.random() > 0.975) cols[i] = 0;
+      cols[i] += 0.45;
+    }
+  }, 55);
+})();
+
+/* ================================================================
+   DATA
+================================================================ */
+const KEY = 'kabu_net_v2';
+
+function seed() {
+  return {
+    blocks: [
+      { id: 'murayan',        handle: 'murayan',        recs: ['kabu_taro', 'sakimono_hana', 'bit_jiro'],   ts: Date.now() - 172800000 },
+      { id: 'kabu_taro',      handle: 'kabu_taro',      recs: ['nikkei_bob', 'etf_alice', 'div_ken'],       ts: Date.now() - 86400000  },
+      { id: 'sakimono_hana',  handle: 'sakimono_hana',  recs: ['fx_mike', 'option_yuki', 'index_sara'],     ts: Date.now() - 72000000  },
+      { id: 'bit_jiro',       handle: 'bit_jiro',       recs: ['crypto_rio', 'defi_tomo'],                  ts: Date.now() - 48000000  },
+      { id: 'kabu_hunter',    handle: 'kabu_hunter',    recs: ['swing_nao', 'value_kenji'],                 ts: Date.now() - 36000000  }
+    ]
+  };
+}
+
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.blocks) return d; } catch (e) {}
+  return seed();
+}
+function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+
+let DB = load();
+
+function toGraph(blocks) {
+  const nm = new Map();
+  const links = [];
+  const addNode = (id, handle, reg) => {
+    if (!nm.has(id)) nm.set(id, { id, handle, reg, deg: 0 });
+  };
+  blocks.forEach(b => {
+    addNode(b.id, b.handle, true);
+    b.recs.forEach(r => {
+      addNode(r, r, false);
+      nm.get(b.id).deg++;
+      links.push({ source: b.id, target: r });
+    });
+  });
+  return { nodes: [...nm.values()], links };
+}
+
+/* ================================================================
+   D3 NETWORK
+================================================================ */
+const R = 26; // node radius
+let sim, svgEl, gEl;
+
+// Color palette per node
+const nodeColor = (d) => d.reg ? '#00ff41' : '#00aaff';
+const avatarUrl  = (h) => `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(h)}&backgroundColor=0a1a0a&pixelSize=3`;
+
+function initSVG() {
+  const wrap = document.getElementById('net-wrap');
+  const W = wrap.clientWidth;
+  const H = Math.min(480, Math.max(360, Math.round(window.innerHeight * 0.48)));
+
+  svgEl = d3.select('#net-svg').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+
+  // Defs
+  const defs = svgEl.append('defs');
+
+  // Glow filter green
+  const gf = defs.append('filter').attr('id', 'glow-g').attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
+  gf.append('feGaussianBlur').attr('stdDeviation', '3.5').attr('result', 'cb');
+  const fm = gf.append('feMerge');
+  fm.append('feMergeNode').attr('in', 'cb');
+  fm.append('feMergeNode').attr('in', 'SourceGraphic');
+
+  // Glow filter blue
+  const bf = defs.append('filter').attr('id', 'glow-b').attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
+  bf.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'cb');
+  const bm = bf.append('feMerge');
+  bm.append('feMergeNode').attr('in', 'cb');
+  bm.append('feMergeNode').attr('in', 'SourceGraphic');
+
+  // Arrow marker
+  defs.append('marker').attr('id', 'arr').attr('viewBox', '0 -4 8 8')
+    .attr('refX', R + 8).attr('refY', 0)
+    .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-4L8,0L0,4').attr('fill', 'rgba(0,255,65,0.4)');
+
+  // Zoom
+  const zoom = d3.zoom().scaleExtent([0.25, 4])
+    .on('zoom', e => gEl.attr('transform', e.transform));
+  svgEl.call(zoom);
+
+  gEl = svgEl.append('g');
+  render();
+}
+
+function render() {
+  if (!gEl) return;
+  const wrap = document.getElementById('net-wrap');
+  const W = wrap.clientWidth;
+  const H = parseInt(svgEl.attr('height'));
+  const { nodes, links } = toGraph(DB.blocks);
+
+  // Update stats
+  document.getElementById('cnt-nodes').textContent  = nodes.length;
+  document.getElementById('cnt-links').textContent  = links.length;
+  document.getElementById('cnt-blocks').textContent = DB.blocks.length;
+
+  // Clear and redraw
+  gEl.selectAll('*').remove();
+
+  if (sim) sim.stop();
+  sim = d3.forceSimulation(nodes)
+    .force('link',   d3.forceLink(links).id(d => d.id).distance(d => d.source.reg && d.target.reg ? 120 : 95).strength(0.7))
+    .force('charge', d3.forceManyBody().strength(-220))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('col',    d3.forceCollide(R + 14));
+
+  // Links
+  const lg = gEl.append('g');
+  const linkSel = lg.selectAll('line').data(links).enter().append('line')
+    .attr('class', 'link-line')
+    .attr('stroke', 'rgba(0,255,65,0.28)')
+    .attr('stroke-width', 1.4)
+    .attr('marker-end', 'url(#arr)');
+
+  // Nodes
+  const ng = gEl.append('g');
+  const defs = svgEl.select('defs');
+
+  const nodeG = ng.selectAll('g.nd').data(nodes).enter().append('g').attr('class', 'nd')
+    .style('cursor', 'pointer')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on('mouseover touchstart', showTip)
+    .on('mouseout  touchend',  hideTip);
+
+  // Outer ring
+  nodeG.append('circle').attr('r', R + 7).attr('fill', 'none')
+    .attr('stroke', d => nodeColor(d)).attr('stroke-width', 1)
+    .attr('opacity', 0.4)
+    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'url(#glow-b)');
+
+  // Background circle
+  nodeG.append('circle').attr('r', R).attr('fill', '#000d00')
+    .attr('stroke', d => nodeColor(d)).attr('stroke-width', 1.5)
+    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'url(#glow-b)');
+
+  // Avatar image using clipPath
+  nodeG.each(function (d) {
+    const safe = d.id.replace(/[^a-zA-Z0-9]/g, '_');
+    const clipId = 'cl_' + safe;
+    defs.append('clipPath').attr('id', clipId)
+      .append('circle').attr('r', R - 2);
+
+    const img = d3.select(this).append('image')
+      .attr('href', avatarUrl(d.handle))
+      .attr('x', -(R - 2)).attr('y', -(R - 2))
+      .attr('width', (R - 2) * 2).attr('height', (R - 2) * 2)
+      .attr('clip-path', `url(#${clipId})`)
+      .attr('preserveAspectRatio', 'xMidYMid slice');
+
+    // Fallback to initial letter if image fails
+    img.node().addEventListener('error', function () {
+      this.remove();
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'central');
+      t.setAttribute('fill', d.reg ? '#00ff41' : '#00aaff');
+      t.setAttribute('font-size', R * 0.8);
+      t.setAttribute('font-family', 'Courier New, monospace');
+      t.setAttribute('font-weight', 'bold');
+      t.textContent = (d.handle[0] || '?').toUpperCase();
+      this.parentNode.appendChild(t);
+      this.parentNode.querySelector('.nd-bg') && (this.parentNode.querySelector('.nd-bg').setAttribute('fill', d.reg ? '#003300' : '#00111a'));
+    });
+  });
+
+  // Label
+  nodeG.append('text').attr('class', 'nd-label')
+    .attr('text-anchor', 'middle').attr('y', R + 13)
+    .attr('fill', d => nodeColor(d)).attr('font-size', '8px')
+    .attr('font-family', 'Courier New, monospace')
+    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'none')
+    .text(d => {
+      const h = d.handle.replace(/^@/, '');
+      return '@' + (h.length > 11 ? h.slice(0, 10) + '…' : h);
+    });
+
+  // Pulsing ring animation
+  (function pulse() {
+    ng.selectAll('.nd circle:first-child')
+      .transition().duration(1800).attr('r', R + 12).attr('opacity', 0.1)
+      .transition().duration(1800).attr('r', R + 6).attr('opacity', 0.45)
+      .on('end', pulse);
+  })();
+
+  // Tick
+  sim.on('tick', () => {
+    const pad = R + 12;
+    nodes.forEach(n => {
+      n.x = Math.max(pad, Math.min(W - pad, n.x));
+      n.y = Math.max(pad, Math.min(H - pad, n.y));
+    });
+    linkSel.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+           .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeG.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+}
+
+/* ── Tooltip ── */
+function showTip(event, d) {
+  const tip = document.getElementById('tooltip');
+  const block = DB.blocks.find(b => b.id === d.id);
+  let html = `<strong style="color:#00ff41">@${d.handle}</strong>`;
+  if (block) {
+    html += `<br>推薦数: ${block.recs.length}`;
+    html += `<br>登録: ${new Date(block.ts).toLocaleDateString('ja-JP')}`;
+    html += `<br><span style="color:#00aaff">✓ 登録済み</span>`;
+  } else {
+    html += `<br><span style="color:#669966">推薦されたアカウント</span>`;
+  }
+  tip.innerHTML = html;
+  tip.style.opacity = '1';
+  const rect = document.getElementById('net-wrap').getBoundingClientRect();
+  const cx = event.touches ? event.touches[0].clientX : event.clientX;
+  const cy = event.touches ? event.touches[0].clientY : event.clientY;
+  const tx = Math.min(cx - rect.left + 8, rect.width - 200);
+  const ty = Math.max(cy - rect.top  - 70, 4);
+  tip.style.left = tx + 'px';
+  tip.style.top  = ty + 'px';
+}
+function hideTip() { document.getElementById('tooltip').style.opacity = '0'; }
+
+/* ================================================================
+   FORM
+================================================================ */
+function norm(v) { return v.trim().replace(/^@+/, '').toLowerCase().replace(/\s+/g, '_'); }
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? 'var(--g)' : 'var(--r)';
+  t.style.color = ok ? '#000' : '#fff';
+  t.style.border = ok ? 'none' : 'none';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function addBlock() {
+  const me = norm(document.getElementById('f-me').value);
+  const r1 = norm(document.getElementById('f-r1').value);
+  const r2 = norm(document.getElementById('f-r2').value);
+  const r3 = norm(document.getElementById('f-r3').value);
+
+  if (!me) { toast('あなたのハンドルを入力してください', false); return; }
+  if (!/^[a-zA-Z0-9_]{1,50}$/.test(me)) { toast('ハンドルは英数字と_のみ使用可', false); return; }
+
+  const recs = [r1, r2, r3].filter(r => r.length > 0);
+  if (recs.length === 0) { toast('最低1人のおすすめを入力してください', false); return; }
+
+  for (const r of recs) {
+    if (!/^[a-zA-Z0-9_]{1,50}$/.test(r)) { toast(`@${r} は無効なハンドルです`, false); return; }
+  }
+
+  if (DB.blocks.find(b => b.id === me)) { toast(`@${me} はすでに登録済みです`, false); return; }
+  if (recs.includes(me)) { toast('自分自身は推薦できません', false); return; }
+
+  DB.blocks.push({ id: me, handle: me, recs, ts: Date.now() });
+  save(DB);
+  render();
+  if (sim) sim.alpha(0.6).restart();
+
+  document.getElementById('f-me').value = '';
+  document.getElementById('f-r1').value = '';
+  document.getElementById('f-r2').value = '';
+  document.getElementById('f-r3').value = '';
+
+  toast(`@${me} をブロックチェーンに追加しました！`);
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+window.addEventListener('DOMContentLoaded', initSVG);
+window.addEventListener('resize', () => {
+  if (!svgEl) return;
+  const W = document.getElementById('net-wrap').clientWidth;
+  const H = parseInt(svgEl.attr('height'));
+  svgEl.attr('viewBox', `0 0 ${W} ${H}`);
+  if (sim) sim.force('center', d3.forceCenter(W / 2, H / 2)).alpha(0.3).restart();
+});
+</script>
+</body>
+</html>
