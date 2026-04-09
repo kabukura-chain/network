@@ -422,6 +422,97 @@
       letter-spacing: 4px;
       margin-bottom: 16px;
     }
+    .edit-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,8,0,0.88);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .edit-box {
+      background: #000a00;
+      border: 1px solid #00ff41;
+      box-shadow: 0 0 30px rgba(0,255,65,0.15);
+      padding: 24px 20px;
+      max-width: 380px;
+      width: 100%;
+    }
+    .edit-box h2 {
+      color: var(--g);
+      font-size: 0.82rem;
+      letter-spacing: 3px;
+      margin-bottom: 16px;
+    }
+    .edit-rec-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .edit-rec-row span {
+      flex: 1;
+      color: var(--g);
+      font-size: 0.78rem;
+      border: 1px solid #1a3a1a;
+      padding: 6px 10px;
+    }
+    .edit-rec-del {
+      background: #dd1111;
+      border: none;
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .edit-add-input {
+      width: 100%;
+      background: #000a00;
+      border: 1px solid #00ff41;
+      color: var(--g);
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+    .edit-add-input::placeholder { color: #1a4a1a; }
+    .edit-section-label {
+      color: #669966;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      margin: 14px 0 8px;
+    }
+    .edit-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .edit-save-btn {
+      flex: 1;
+      background: var(--g);
+      color: #000;
+      border: none;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: bold;
+      padding: 10px;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
+    .edit-cancel-btn {
+      flex: 1;
+      background: transparent;
+      color: #669966;
+      border: 1px solid #1a3a1a;
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 10px;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
     .admin-trigger-btn {
       background: transparent;
       border: none;
@@ -767,6 +858,23 @@
   </div>
 </div>
 
+<!-- ADMIN EDIT MODAL -->
+<div id="edit-modal" class="edit-modal" style="display:none">
+  <div class="edit-box">
+    <h2 id="edit-modal-title">[ 推薦を編集 ]</h2>
+    <p class="edit-section-label">// 現在の推薦</p>
+    <div id="edit-current-recs"></div>
+    <p class="edit-section-label">// 推薦を追加（空白はスキップ）</p>
+    <input class="edit-add-input" id="edit-add-1" type="text" placeholder="@ハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
+    <input class="edit-add-input" id="edit-add-2" type="text" placeholder="@ハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
+    <input class="edit-add-input" id="edit-add-3" type="text" placeholder="@ハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="edit-btn-row">
+      <button class="edit-save-btn" onclick="saveEditBlock()">保存する</button>
+      <button class="edit-cancel-btn" onclick="closeEditModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <!-- SHARE MODAL -->
 <div id="share-modal" class="share-modal" style="display:none">
   <div class="share-box">
@@ -1071,6 +1179,26 @@ function render() {
         event.preventDefault();
         if (confirm(`@${d.handle} を削除しますか？`)) deleteBlock(d.id);
       });
+
+      // ✎ 編集ボタン
+      const editBtn = d3.select(this).append('g')
+        .attr('class', 'edit-btn')
+        .attr('transform', `translate(${-(R + 8)}, ${-(R + 8)})`)
+        .style('cursor', 'pointer');
+      editBtn.append('circle').attr('r', 13).attr('fill', '#000').attr('opacity', 0.01);
+      editBtn.append('circle').attr('r', 10).attr('fill', '#007700').attr('stroke', '#00ff41').attr('stroke-width', 1.5);
+      editBtn.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('fill', '#00ff41').attr('font-size', '12px').attr('font-weight', 'bold')
+        .attr('pointer-events', 'none').text('✎');
+      editBtn.on('pointerdown', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+      });
+      editBtn.on('click', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        openEditModal(d.id);
+      });
     });
   }
 
@@ -1282,6 +1410,77 @@ function submitAdminLogin() {
     setTimeout(() => document.getElementById('admin-pass-input').style.borderColor = '', 1000);
   }
 }
+let editTargetId = null;
+
+function openEditModal(id) {
+  const block = DB.blocks.find(b => b.id === id);
+  if (!block) return;
+  editTargetId = id;
+  document.getElementById('edit-modal-title').textContent = `[ @${block.handle} の推薦を編集 ]`;
+
+  // 現在の推薦を表示
+  const container = document.getElementById('edit-current-recs');
+  container.innerHTML = '';
+  if (!block.recs || block.recs.length === 0) {
+    container.innerHTML = '<p style="color:#555;font-size:0.72rem">推薦なし</p>';
+  } else {
+    block.recs.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'edit-rec-row';
+      row.innerHTML = `<span>@${r}</span><button class="edit-rec-del" onclick="removeRec('${id}','${r}')">削除</button>`;
+      container.appendChild(row);
+    });
+  }
+
+  // 追加欄をリセット・空き枠数に応じて表示制御
+  const slots = 3 - (block.recs ? block.recs.length : 0);
+  ['edit-add-1','edit-add-2','edit-add-3'].forEach((fid, i) => {
+    const el = document.getElementById(fid);
+    el.value = '';
+    el.style.display = i < slots ? 'block' : 'none';
+  });
+
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function removeRec(blockId, recId) {
+  const block = DB.blocks.find(b => b.id === blockId);
+  if (!block) return;
+  block.recs = block.recs.filter(r => r !== recId);
+  save(DB);
+  render();
+  openEditModal(blockId); // モーダルを更新表示
+}
+
+function saveEditBlock() {
+  const block = DB.blocks.find(b => b.id === editTargetId);
+  if (!block) return;
+  const adds = ['edit-add-1','edit-add-2','edit-add-3']
+    .map(fid => norm(document.getElementById(fid).value))
+    .filter(v => v.length > 0);
+
+  for (const r of adds) {
+    if (!/^[a-zA-Z0-9_]{1,50}$/.test(r)) { toast(`@${r} は無効なハンドルです`, false); return; }
+    if (r === block.id) { toast('本人を推薦することはできません', false); return; }
+    if (block.recs && block.recs.includes(r)) { toast(`@${r} はすでに推薦済みです`, false); return; }
+  }
+
+  if (!block.recs) block.recs = [];
+  const total = block.recs.length + adds.length;
+  if (total > 3) { toast(`推薦は最大3名までです（現在${block.recs.length}名）`, false); return; }
+
+  block.recs.push(...adds);
+  save(DB);
+  render();
+  closeEditModal();
+  toast(`@${block.handle} の推薦を更新しました`);
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editTargetId = null;
+}
+
 function exitAdminMode() {
   adminMode = false;
   document.getElementById('admin-banner').style.display = 'none';
