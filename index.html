@@ -1176,7 +1176,12 @@ function seed() {
     settings: { maxDepth: 4 },
     reports: {},
     banned: [],
-    invites: {},
+    invites: {
+      // cadillac600（depth1）が配布できる3枚
+      'KBK-SEED1': { code: 'KBK-SEED1', generatedBy: 'cadillac600', depth: 2, used: false, usedBy: null, ts: Date.now() - 172800000 },
+      'KBK-SEED2': { code: 'KBK-SEED2', generatedBy: 'cadillac600', depth: 2, used: false, usedBy: null, ts: Date.now() - 172800000 },
+      'KBK-SEED3': { code: 'KBK-SEED3', generatedBy: 'cadillac600', depth: 2, used: false, usedBy: null, ts: Date.now() - 172800000 },
+    },
     blocks: [
       { id: 'cadillac600', handle: 'cadillac600', recs: ['tesuta001', 'AbaneChan', 'cissan_9984'], depth: 1, ts: Date.now() - 172800000 }
     ]
