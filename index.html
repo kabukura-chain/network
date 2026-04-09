@@ -486,7 +486,8 @@ let sim, svgEl, gEl;
 
 // Color palette per node
 const nodeColor = (d) => d.reg ? '#00ff41' : '#00aaff';
-const avatarUrl  = (h) => `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(h)}&backgroundColor=0a1a0a&pixelSize=3`;
+const avatarUrl  = (h) => `https://unavatar.io/x/${encodeURIComponent(h.replace(/^@/, ''))}`;
+const fallbackUrl = (h) => `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(h)}&backgroundColor=0a1a0a&pixelSize=3`;
 
 function initSVG() {
   const wrap = document.getElementById('net-wrap');
@@ -602,8 +603,13 @@ function render() {
       .attr('clip-path', `url(#${clipId})`)
       .attr('preserveAspectRatio', 'xMidYMid slice');
 
-    // Fallback to initial letter if image fails
+    // Fallback: DiceBear → initial letter
     img.node().addEventListener('error', function () {
+      if (!this.dataset.fallback) {
+        this.dataset.fallback = '1';
+        this.setAttribute('href', fallbackUrl(d.handle));
+        return;
+      }
       this.remove();
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('text-anchor', 'middle');
