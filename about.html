@@ -333,19 +333,68 @@ const observer = new IntersectionObserver(entries=>{
 },{threshold:0.15});
 document.querySelectorAll('.section').forEach(s=>observer.observe(s));
 
-/* ── Counter ── */
+/* ── Counter（スロットマシン演出） ── */
 let counterDone=false;
 function startCounter(){
   if(counterDone) return; counterDone=true;
   const el=document.getElementById('counter');
-  const dur=2200, target=1000, start=Date.now();
-  (function tick(){
-    const t=Math.min((Date.now()-start)/dur,1);
-    const e=1-Math.pow(1-t,3);
-    el.textContent=Math.floor(e*target).toLocaleString();
-    if(t<1) requestAnimationFrame(tick);
-    else el.textContent=target.toLocaleString();
-  })();
+
+  // フェーズ時間（ms）
+  const PH1=2200; // 高速ランダム
+  const PH2=1800; // 減速・収束
+  const PH3=1400; // 超スロー
+  const TOTAL=PH1+PH2+PH3;
+
+  const startTime=Date.now();
+
+  function tick(){
+    const elapsed=Date.now()-startTime;
+    if(elapsed>=TOTAL){
+      // ガッチャン：1000に確定＋フラッシュ
+      el.textContent='1,000';
+      el.style.transition='transform 0.08s,color 0.08s,text-shadow 0.08s';
+      el.style.transform='scale(1.18)';
+      el.style.color='#ffffff';
+      el.style.textShadow='0 0 80px #fff, 0 0 160px var(--g)';
+      setTimeout(()=>{
+        el.style.transform='scale(1)';
+        el.style.color='';
+        el.style.textShadow='';
+        el.style.animation='pulse-glow 2.5s ease-in-out infinite';
+      },180);
+      return;
+    }
+
+    let num, delay;
+
+    if(elapsed<PH1){
+      // フェーズ1：高速ランダム（0〜1200をランダムに飛び回る）
+      num=Math.floor(Math.random()*1200);
+      delay=45;
+
+    } else if(elapsed<PH1+PH2){
+      // フェーズ2：減速しながら1000に近づく
+      const p=(elapsed-PH1)/PH2; // 0→1
+      const center=p*1000;
+      const spread=(1-p)*(1-p)*600;
+      num=Math.floor(center+(Math.random()-0.5)*spread*2);
+      num=Math.max(0,Math.min(1100,num));
+      delay=45+p*280; // 45ms→325ms
+
+    } else {
+      // フェーズ3：ほぼ止まりかけ、950〜999をゆっくりチラつく
+      const p=(elapsed-PH1-PH2)/PH3; // 0→1
+      const base=950+Math.floor(p*49); // 950→999
+      num=base+Math.floor(Math.random()*8-4);
+      num=Math.max(950,Math.min(999,num));
+      delay=180+p*400; // 180ms→580ms
+    }
+
+    el.textContent=num.toLocaleString();
+    setTimeout(tick, delay);
+  }
+
+  tick();
 }
 
 /* ── Trust bars ── */
