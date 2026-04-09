@@ -363,6 +363,64 @@
       text-decoration: line-through;
     }
 
+    /* ── MY CODES ── */
+    .mycode-card {
+      border: 1px solid rgba(0,255,65,0.15);
+      background: var(--g3);
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .mycode-title {
+      color: var(--g); font-size: 0.72rem;
+      letter-spacing: 2px; margin-bottom: 6px;
+    }
+    .mycode-sub {
+      color: #557755; font-size: 0.68rem;
+      margin-bottom: 10px; line-height: 1.6;
+    }
+    .mycode-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .mycode-input {
+      flex: 1; background: #000a00;
+      border: 1px solid #1a3a1a; color: var(--g);
+      font-family: inherit; font-size: 0.78rem; padding: 8px 10px;
+    }
+    .mycode-input::placeholder { color: #1a4a1a; }
+    .mycode-btn {
+      background: transparent; border: 1px solid var(--g);
+      color: var(--g); font-family: inherit;
+      font-size: 0.72rem; padding: 8px 16px;
+      cursor: pointer; letter-spacing: 1px;
+    }
+    .mycode-btn:active { background: var(--g2); }
+    .mycode-code-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .mycode-val {
+      flex: 1; font-size: 0.85rem; letter-spacing: 3px;
+      font-weight: bold; padding: 8px 10px;
+      border: 1px solid rgba(0,255,65,0.25);
+      background: rgba(0,255,65,0.04);
+    }
+    .mycode-val.used {
+      color: #333; text-decoration: line-through;
+      border-color: #111; background: transparent;
+    }
+    .mycode-val.unused { color: var(--g); }
+    .mycode-status {
+      font-size: 0.65rem; letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .mycode-status.unused { color: #669966; }
+    .mycode-status.used { color: #333; }
+    .mycode-copy {
+      background: transparent; border: 1px solid #1a4a1a;
+      color: #669966; font-family: inherit;
+      font-size: 0.62rem; padding: 7px 10px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .mycode-empty { color: #336633; font-size: 0.72rem; letter-spacing: 1px; }
+    .mycode-error { color: var(--r); font-size: 0.72rem; letter-spacing: 1px; }
+
     /* ── DELETE REQUEST ── */
     .delete-req-card {
       border: 1px solid rgba(255,68,0,0.25);
@@ -953,6 +1011,17 @@
       <input type="text" id="f-r3" placeholder="@bit_san_C または bit_san_C" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <button class="submit-btn" onclick="addBlock()">チェーンに追加する</button>
+  </div>
+
+  <!-- MY CODES -->
+  <div class="mycode-card">
+    <p class="mycode-title">// 自分の招待コードを確認する</p>
+    <p class="mycode-sub">登録時に発行されたコードをいつでも確認できます。</p>
+    <div class="mycode-row">
+      <input type="text" id="mycode-handle" class="mycode-input" placeholder="@あなたのハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="mycode-btn" onclick="lookupMyCodes()">確認</button>
+    </div>
+    <div id="mycode-result"></div>
   </div>
 
   <!-- WARNING -->
@@ -1587,6 +1656,35 @@ function copyCode(code, btn) {
   }).catch(() => {
     btn.textContent = '手動コピー';
   });
+}
+
+function lookupMyCodes() {
+  const handle = norm(document.getElementById('mycode-handle').value);
+  const result = document.getElementById('mycode-result');
+  if (!handle) { result.innerHTML = '<p class="mycode-error">ハンドルを入力してください</p>'; return; }
+
+  const invites = DB.invites || {};
+  const mine = Object.values(invites).filter(iv => iv.generatedBy === handle);
+
+  if (mine.length === 0) {
+    result.innerHTML = '<p class="mycode-empty">このハンドルで発行されたコードはありません</p>';
+    return;
+  }
+
+  let html = '';
+  mine.sort((a, b) => (a.ts || 0) - (b.ts || 0)).forEach(iv => {
+    const usedClass = iv.used ? 'used' : 'unused';
+    const statusText = iv.used ? `使用済み（@${iv.usedBy}）` : '未使用';
+    const copyBtn = !iv.used
+      ? `<button class="mycode-copy" onclick="copyCode('${iv.code}', this)">コピー</button>`
+      : '';
+    html += `<div class="mycode-code-row">
+      <div class="mycode-val ${usedClass}">${iv.code}</div>
+      <span class="mycode-status ${usedClass}">段${iv.depth} / ${statusText}</span>
+      ${copyBtn}
+    </div>`;
+  });
+  result.innerHTML = html;
 }
 
 function closeCodeModal() {
