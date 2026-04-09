@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#000a00"/>
+  <defs>
+    <filter id="g" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#g)" fill="none" stroke="#00ff41" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 上のチェーンリンク -->
+    <rect x="6" y="4" width="9" height="13" rx="4.5" stroke-width="2.2"/>
+    <!-- 下のチェーンリンク（逆向き・重なり） -->
+    <rect x="17" y="15" width="9" height="13" rx="4.5" stroke-width="2.2"/>
+    <!-- つなぎ部分 -->
+    <line x1="15" y1="10" x2="17" y2="22" stroke-width="1.5" stroke="#00ff41" opacity="0.5"/>
+  </g>
+</svg>
