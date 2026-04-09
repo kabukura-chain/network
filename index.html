@@ -744,13 +744,17 @@
 <div id="admin-modal" class="admin-modal" style="display:none">
   <div class="admin-box">
     <h2>[ 管理者ログイン ]</h2>
-    <div class="field">
-      <label>パスワード</label>
-      <input type="password" id="admin-pass-input" placeholder="••••••••"
-        autocomplete="off"
-        onkeydown="if(event.key==='Enter') submitAdminLogin()">
-    </div>
-    <button class="submit-btn" onclick="submitAdminLogin()">ログイン</button>
+    <form id="admin-form" onsubmit="submitAdminLogin(); return false;" autocomplete="on">
+      <!-- パスワードマネージャー用：ユーザー名フィールド（非表示） -->
+      <input type="text" name="username" autocomplete="username"
+             value="murayan-admin" style="display:none" tabindex="-1" aria-hidden="true">
+      <div class="field">
+        <label for="admin-pass-input">パスワード</label>
+        <input type="password" id="admin-pass-input" name="password"
+               placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="submit-btn">ログイン</button>
+    </form>
     <button class="share-close" onclick="closeAdminLogin()" style="margin-top:8px">キャンセル</button>
   </div>
 </div>
