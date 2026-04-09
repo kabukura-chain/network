@@ -368,6 +368,87 @@
       color: #669966;
     }
 
+    /* ── SHARE MODAL ── */
+    .share-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,8,0,0.88);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .share-box {
+      background: #000a00;
+      border: 1px solid var(--g);
+      box-shadow: 0 0 40px rgba(0,255,65,0.25);
+      padding: 24px 20px;
+      max-width: 480px;
+      width: 100%;
+    }
+    .share-box h2 {
+      color: var(--g);
+      font-size: 0.85rem;
+      letter-spacing: 4px;
+      margin-bottom: 6px;
+      text-shadow: 0 0 10px var(--g);
+    }
+    .share-label {
+      font-size: 0.68rem;
+      color: #669966;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .share-preview {
+      background: rgba(0,255,65,0.04);
+      border: 1px solid rgba(0,255,65,0.2);
+      border-left: 3px solid var(--g);
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: #99dd99;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-bottom: 16px;
+    }
+    .share-x-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--g);
+      color: var(--g);
+      font-family: inherit;
+      font-size: 0.88rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+    .share-x-btn:hover, .share-x-btn:active {
+      background: var(--g);
+      color: #000;
+      box-shadow: 0 0 20px var(--g);
+    }
+    .share-close {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid rgba(0,255,65,0.2);
+      color: #557755;
+      font-family: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .share-close:hover { color: var(--g); border-color: var(--g); }
+
     /* ── TOAST ── */
     .toast {
       position: fixed;
@@ -587,6 +668,19 @@
     本物の株クラ民だけがつながるリアル人間ネットワーク ― デモ版
   </footer>
 </main>
+
+<!-- SHARE MODAL -->
+<div id="share-modal" class="share-modal" style="display:none">
+  <div class="share-box">
+    <h2>[ 登録完了！]</h2>
+    <p class="share-label">紹介した方にシェアしよう（任意）</p>
+    <div class="share-preview" id="share-preview"></div>
+    <a id="share-btn" class="share-x-btn" target="_blank" rel="noopener noreferrer">
+      𝕏 &nbsp;Xでポストする
+    </a>
+    <button class="share-close" onclick="closeShare()">閉じる（ポストしない）</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -939,7 +1033,7 @@ function addBlock() {
   document.getElementById('f-r2').value = '';
   document.getElementById('f-r3').value = '';
 
-  toast(`@${me} をチェーンに追加しました！`);
+  showShare(me, recs);
 }
 
 /* ================================================================
@@ -1014,6 +1108,24 @@ function renderReports() {
     banEl.innerHTML = `<h3>// 削除済みアカウント</h3>` +
       DB.banned.map(h => `<span class="ban-item">@${h}</span>`).join('');
   }
+}
+
+/* ================================================================
+   SHARE MODAL
+================================================================ */
+function showShare(me, recs) {
+  const handles = recs.map(r => '@' + r).join(' ');
+  const url = 'https://cadillac600.github.io/kabu-twitter-network/';
+  const text = `${handles}\n@${me}さんから株クラNetworkに登録されました！\n信頼できる株クラを1〜3名紹介登録してみてね！\n株クラNetwork\n${url}`;
+
+  document.getElementById('share-preview').textContent = text;
+  document.getElementById('share-btn').href =
+    'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+  document.getElementById('share-modal').style.display = 'flex';
+}
+
+function closeShare() {
+  document.getElementById('share-modal').style.display = 'none';
 }
 
 /* ================================================================
