@@ -744,6 +744,17 @@
       cursor: pointer; letter-spacing: 1px; white-space: nowrap;
     }
     .code-copy-btn:active { background: #001a00; }
+    .code-alert {
+      background: rgba(255,68,0,0.1);
+      border: 1px solid #ff4400;
+      color: #ff6622;
+      font-size: 0.72rem;
+      line-height: 1.8;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+    }
+    .code-alert strong { color: #fff; }
     .code-note {
       color: #ff4400; font-size: 0.68rem;
       letter-spacing: 1px; margin: 14px 0 16px;
@@ -1087,10 +1098,15 @@
 <div id="code-modal" class="code-modal" style="display:none">
   <div class="code-box">
     <h2>[ 登録完了 — あなたの招待コード ]</h2>
-    <p class="code-sub">紹介する3名にDMでそれぞれ1枚ずつ送ってください。<br>コードは1回限り有効です。</p>
+    <div class="code-alert">
+      🚨 すぐに閉じないでください！このコードは2度と表示されません！<br>
+      コピーボタンでメモするか、スクショで保存してから閉じてください。<br>
+      紛失した場合は管理者 <strong>@cadillac600</strong> にDMで再発行を依頼してください。
+    </div>
+    <p class="code-sub">紹介する3名にDMでそれぞれ1枚ずつ送ってください。コードは1回限り有効です。</p>
     <div id="code-list"></div>
-    <p class="code-note">⚠ このコードは今後表示されません。必ずメモまたはスクショを取ってください。</p>
-    <button class="share-close" onclick="closeCodeModal()">閉じる（シェア画面へ）</button>
+    <p class="code-note">⚠ 全コードを保存したことを確認してから閉じてください。</p>
+    <button class="share-close" onclick="closeCodeModal()" style="margin-top:4px">保存した — 閉じる</button>
   </div>
 </div>
 
