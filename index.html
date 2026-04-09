@@ -818,6 +818,25 @@
     <p class="site-sub">〜 信頼でつながる株クラコミュニティ 〜</p>
   </header>
 
+  <!-- LOADING -->
+  <div id="loading" class="loading-bar">⬛ Firebaseに接続中...</div>
+
+  <!-- STATS -->
+  <p class="sec">// NETWORK STATUS</p>
+  <div class="stats">
+    <div class="stat"><span class="stat-val" id="cnt-nodes">0</span>ノード数</div>
+    <div class="stat"><span class="stat-val" id="cnt-links">0</span>コネクション</div>
+    <div class="stat"><span class="stat-val" id="cnt-blocks">0</span>参加者数</div>
+  </div>
+
+  <!-- NETWORK -->
+  <p class="sec">// リアル人間株クラチェーン ネットワーク図</p>
+  <div class="net-wrap" id="net-wrap">
+    <svg id="net-svg"></svg>
+    <div id="tooltip"></div>
+    <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
+  </div>
+
   <!-- INFO -->
   <div class="info-card">
     <span class="hi">「株やってるやつはX（Twitter）やってないとかバーチャ！」</span><br>
@@ -849,25 +868,6 @@
       <span class="how-num">05</span>
       <span class="how-text"><span class="hi2">ノード数</span>＝ネットワーク上に存在するアカウントの総数（登録者＋推薦されたアカウント）／<span class="hi2">コネクション</span>＝アカウント同士のつながりの総数</span>
     </div>
-  </div>
-
-  <!-- LOADING -->
-  <div id="loading" class="loading-bar">⬛ Firebaseに接続中...</div>
-
-  <!-- STATS -->
-  <p class="sec">// NETWORK STATUS</p>
-  <div class="stats">
-    <div class="stat"><span class="stat-val" id="cnt-nodes">0</span>ノード数</div>
-    <div class="stat"><span class="stat-val" id="cnt-links">0</span>コネクション</div>
-    <div class="stat"><span class="stat-val" id="cnt-blocks">0</span>参加者数</div>
-  </div>
-
-  <!-- NETWORK -->
-  <p class="sec">// リアル人間株クラチェーン ネットワーク図</p>
-  <div class="net-wrap" id="net-wrap">
-    <svg id="net-svg"></svg>
-    <div id="tooltip"></div>
-    <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
   </div>
 
   <!-- NOTE -->
