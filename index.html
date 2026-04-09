@@ -1284,12 +1284,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     const snap = await DB_REF.once('value');
     const existing = snap.val();
 
-    if (!existing || !existing.blocks) {
-      // データが空なら初期データを書き込む
+    if (!existing) {
+      // 完全に空（初回のみ）シードデータを書き込む
       DB = seed();
       await DB_REF.set(DB);
     } else {
+      // データあり（削除で blocks が空でも再シードしない）
       DB = normalize(existing);
+      if (!DB.blocks) DB.blocks = [];
     }
 
     loading.style.display = 'none';
