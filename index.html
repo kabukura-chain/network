@@ -1364,13 +1364,14 @@ function toGraph(blocks) {
   const links = [];
   const banned = new Set(DB.banned || []);
   const addNode = (id, handle, reg) => {
-    if (!nm.has(id) && !banned.has(id)) nm.set(id, { id, handle, reg, deg: 0 });
+    if (!nm.has(id) && !banned.has(id)) nm.set(id, { id, handle, reg, deg: 0, inDeg: 0 });
   };
   blocks.filter(b => !banned.has(b.id)).forEach(b => {
     addNode(b.id, b.handle, true);
     b.recs.filter(r => !banned.has(r)).forEach(r => {
       addNode(r, r, false);
       nm.get(b.id).deg++;
+      nm.get(r).inDeg++;
       links.push({ source: b.id, target: r });
     });
   });
@@ -1384,7 +1385,9 @@ const R = 26; // node radius
 let sim, svgEl, gEl;
 
 // Color palette per node
-const nodeColor = (d) => d.reg ? '#00ff41' : '#00aaff';
+const LEGEND_MIN = 5;
+const isLegend = (d) => (d.inDeg || 0) >= LEGEND_MIN;
+const nodeColor = (d) => isLegend(d) ? '#ffd700' : (d.reg ? '#00ff41' : '#00aaff');
 const avatarUrl  = (h) => `https://unavatar.io/x/${encodeURIComponent(h.replace(/^@/, ''))}`;
 const fallbackUrl = (h) => `https://api.dicebear.com/7.x/pixel-art/png?seed=${encodeURIComponent(h)}&backgroundColor=0d1f0d&size=64`;
 
@@ -1411,6 +1414,13 @@ function initSVG() {
   const bm = bf.append('feMerge');
   bm.append('feMergeNode').attr('in', 'cb');
   bm.append('feMergeNode').attr('in', 'SourceGraphic');
+
+  // Glow filter gold (legend nodes)
+  const lf = defs.append('filter').attr('id', 'glow-gold').attr('x', '-60%').attr('y', '-60%').attr('width', '220%').attr('height', '220%');
+  lf.append('feGaussianBlur').attr('stdDeviation', '5').attr('result', 'cb');
+  const lm = lf.append('feMerge');
+  lm.append('feMergeNode').attr('in', 'cb');
+  lm.append('feMergeNode').attr('in', 'SourceGraphic');
 
   // Arrow marker
   defs.append('marker').attr('id', 'arr').attr('viewBox', '0 -4 8 8')
@@ -1477,16 +1487,27 @@ function render() {
     .on('mouseover touchstart', showTip)
     .on('mouseout  touchend',  hideTip);
 
+  // Legend pulse ring (behind everything)
+  nodeG.filter(d => isLegend(d)).each(function() {
+    const pr = d3.select(this).append('circle')
+      .attr('r', R + 10).attr('fill', 'none')
+      .attr('stroke', '#ffd700').attr('stroke-width', 0.8).attr('opacity', 0);
+    pr.append('animate').attr('attributeName', 'r')
+      .attr('values', `${R+10};${R+24};${R+10}`).attr('dur', '2.6s').attr('repeatCount', 'indefinite');
+    pr.append('animate').attr('attributeName', 'opacity')
+      .attr('values', '0.7;0;0.7').attr('dur', '2.6s').attr('repeatCount', 'indefinite');
+  });
+
   // Outer ring
-  nodeG.append('circle').attr('r', R + 7).attr('fill', 'none')
-    .attr('stroke', d => nodeColor(d)).attr('stroke-width', 1)
-    .attr('opacity', 0.4)
-    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'url(#glow-b)');
+  nodeG.append('circle').attr('r', d => isLegend(d) ? R + 9 : R + 7).attr('fill', 'none')
+    .attr('stroke', d => nodeColor(d)).attr('stroke-width', d => isLegend(d) ? 2 : 1)
+    .attr('opacity', d => isLegend(d) ? 0.75 : 0.4)
+    .attr('filter', d => isLegend(d) ? 'url(#glow-gold)' : (d.reg ? 'url(#glow-g)' : 'url(#glow-b)'));
 
   // Background circle
-  nodeG.append('circle').attr('r', R).attr('fill', '#000d00')
-    .attr('stroke', d => nodeColor(d)).attr('stroke-width', 1.5)
-    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'url(#glow-b)');
+  nodeG.append('circle').attr('r', R).attr('fill', d => isLegend(d) ? '#1a1000' : '#000d00')
+    .attr('stroke', d => nodeColor(d)).attr('stroke-width', d => isLegend(d) ? 2.5 : 1.5)
+    .attr('filter', d => isLegend(d) ? 'url(#glow-gold)' : (d.reg ? 'url(#glow-g)' : 'url(#glow-b)'));
 
   // Avatar image using clipPath
   nodeG.each(function (d) {
@@ -1513,7 +1534,7 @@ function render() {
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('text-anchor', 'middle');
       t.setAttribute('dominant-baseline', 'central');
-      t.setAttribute('fill', d.reg ? '#00ff41' : '#00aaff');
+      t.setAttribute('fill', isLegend(d) ? '#ffd700' : (d.reg ? '#00ff41' : '#00aaff'));
       t.setAttribute('font-size', R * 0.8);
       t.setAttribute('font-family', 'Courier New, monospace');
       t.setAttribute('font-weight', 'bold');
@@ -1528,10 +1549,11 @@ function render() {
     .attr('text-anchor', 'middle').attr('y', R + 13)
     .attr('fill', d => nodeColor(d)).attr('font-size', '8px')
     .attr('font-family', 'Courier New, monospace')
-    .attr('filter', d => d.reg ? 'url(#glow-g)' : 'none')
+    .attr('filter', d => isLegend(d) ? 'url(#glow-gold)' : (d.reg ? 'url(#glow-g)' : 'none'))
     .text(d => {
       const h = d.handle.replace(/^@/, '');
-      return '@' + (h.length > 11 ? h.slice(0, 10) + '…' : h);
+      const name = '@' + (h.length > 11 ? h.slice(0, 10) + '…' : h);
+      return isLegend(d) ? '★ ' + name : name;
     });
 
   // 管理者モード：削除ボタン
