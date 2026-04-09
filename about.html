@@ -107,18 +107,17 @@
 
     /* ── ANIMATIONS ── */
     @keyframes pulse-glow { 0%,100% { text-shadow: 0 0 50px var(--g), 0 0 100px rgba(0,255,65,0.3); } 50% { text-shadow: 0 0 70px var(--g), 0 0 140px rgba(0,255,65,0.5); } }
-    @keyframes big-glow {
-      0%,100% {
-        text-shadow: 0 0 30px var(--g), 0 0 80px var(--g), 0 0 160px rgba(0,255,65,0.5);
-        transform: scale(1);
-      }
-      50% {
-        text-shadow: 0 0 80px var(--g), 0 0 180px var(--g), 0 0 320px rgba(0,255,65,0.8), 0 0 500px rgba(0,255,65,0.3);
-        transform: scale(1.06);
-      }
+    /* ドックン ドックン 心音アニメ */
+    @keyframes heartbeat {
+      0%   { transform: scale(1);    text-shadow: 0 0 30px var(--g), 0 0 70px rgba(0,255,65,0.4); }
+      10%  { transform: scale(1.13); text-shadow: 0 0 70px var(--g), 0 0 160px rgba(0,255,65,0.8), 0 0 300px rgba(0,255,65,0.4); }
+      20%  { transform: scale(0.97); text-shadow: 0 0 30px var(--g), 0 0 60px rgba(0,255,65,0.3); }
+      32%  { transform: scale(1.07); text-shadow: 0 0 50px var(--g), 0 0 120px rgba(0,255,65,0.6), 0 0 220px rgba(0,255,65,0.3); }
+      44%  { transform: scale(1);    text-shadow: 0 0 30px var(--g), 0 0 70px rgba(0,255,65,0.4); }
+      100% { transform: scale(1);    text-shadow: 0 0 30px var(--g), 0 0 70px rgba(0,255,65,0.4); }
     }
     .counter-num { animation: pulse-glow 2.5s ease-in-out infinite; }
-    .counter-num.landed { animation: big-glow 1.8s ease-in-out infinite; }
+    .counter-num.landed { animation: heartbeat 1.6s ease-in-out infinite; }
   </style>
 </head>
 <body>
