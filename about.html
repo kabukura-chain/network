@@ -107,7 +107,18 @@
 
     /* ── ANIMATIONS ── */
     @keyframes pulse-glow { 0%,100% { text-shadow: 0 0 50px var(--g), 0 0 100px rgba(0,255,65,0.3); } 50% { text-shadow: 0 0 70px var(--g), 0 0 140px rgba(0,255,65,0.5); } }
+    @keyframes big-glow {
+      0%,100% {
+        text-shadow: 0 0 30px var(--g), 0 0 80px var(--g), 0 0 160px rgba(0,255,65,0.5);
+        transform: scale(1);
+      }
+      50% {
+        text-shadow: 0 0 80px var(--g), 0 0 180px var(--g), 0 0 320px rgba(0,255,65,0.8), 0 0 500px rgba(0,255,65,0.3);
+        transform: scale(1.06);
+      }
+    }
     .counter-num { animation: pulse-glow 2.5s ease-in-out infinite; }
+    .counter-num.landed { animation: big-glow 1.8s ease-in-out infinite; }
   </style>
 </head>
 <body>
@@ -340,9 +351,9 @@ function startCounter(){
   const el=document.getElementById('counter');
 
   // フェーズ時間（ms）
-  const PH1=2200; // 高速ランダム
-  const PH2=1800; // 減速・収束
-  const PH3=1400; // 超スロー
+  const PH1=3500; // 高速ランダム
+  const PH2=3400; // 減速・収束
+  const PH3=1900; // 超スロー
   const TOTAL=PH1+PH2+PH3;
 
   const startTime=Date.now();
@@ -350,18 +361,27 @@ function startCounter(){
   function tick(){
     const elapsed=Date.now()-startTime;
     if(elapsed>=TOTAL){
-      // ガッチャン：1000に確定＋フラッシュ
+      // ガッチャン：1000確定 → 緑フラッシュ → ぼわあんループ
       el.textContent='1,000';
-      el.style.transition='transform 0.08s,color 0.08s,text-shadow 0.08s';
-      el.style.transform='scale(1.18)';
-      el.style.color='#ffffff';
-      el.style.textShadow='0 0 80px #fff, 0 0 160px var(--g)';
+      el.style.animation='none';
+      el.style.transition='transform 0.06s, color 0.06s, text-shadow 0.06s';
+      el.style.transform='scale(1.22)';
+      el.style.color='#00ff41';
+      el.style.textShadow='0 0 60px #00ff41, 0 0 140px #00ff41, 0 0 280px rgba(0,255,65,0.9), 0 0 500px rgba(0,255,65,0.5)';
+      // 少し膨らんだ後に収縮
       setTimeout(()=>{
-        el.style.transform='scale(1)';
+        el.style.transition='transform 0.25s, color 0.25s, text-shadow 0.3s';
+        el.style.transform='scale(0.96)';
+        el.style.textShadow='0 0 30px #00ff41, 0 0 80px rgba(0,255,65,0.6)';
+      },120);
+      // 落ち着いてからぼわあんループへ
+      setTimeout(()=>{
+        el.style.transition='';
+        el.style.transform='';
         el.style.color='';
         el.style.textShadow='';
-        el.style.animation='pulse-glow 2.5s ease-in-out infinite';
-      },180);
+        el.classList.add('landed');
+      },480);
       return;
     }
 
