@@ -616,7 +616,7 @@
   <div class="how-grid">
     <div class="how-item">
       <span class="how-num">01</span>
-      <span class="how-text">あなたの@ハンドルと、信頼できる株クラを<span class="hi2">最低1人〜最大3人</span>入力して登録</span>
+      <span class="how-text">あなたの@ハンドルと、信頼できる株クラを<span class="hi2">最低1人〜最大3人</span>入力して登録（1名でもOK）</span>
     </div>
     <div class="how-item">
       <span class="how-num">02</span>
@@ -663,7 +663,7 @@
   <!-- FORM -->
   <p class="sec">// 株クラNetworkチェーンに参加する</p>
   <div class="form-card">
-    <h2>[ あなたのおすすめを登録（1〜3人）]</h2>
+    <h2>[ あなたのおすすめを登録（1〜3人）]　※1名でもOK</h2>
     <div class="field">
       <label>あなたの X（Twitter）@ハンドル（@あり・なしどちらでもOK）</label>
       <input type="text" id="f-me" placeholder="@あなたのハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -838,6 +838,7 @@ let adminMode = false;
 
 function seed() {
   return {
+    initialized: true,
     reports: {},
     banned: [],
     blocks: [
@@ -849,6 +850,8 @@ function seed() {
 function normalize(data) {
   if (!data.reports) data.reports = {};
   if (!data.banned)  data.banned  = [];
+  if (!data.blocks)  data.blocks  = [];
+  data.initialized = true;
   return data;
 }
 
@@ -1236,6 +1239,15 @@ function renderReports() {
 function openAdminLogin() {
   document.getElementById('admin-modal').style.display = 'flex';
   document.getElementById('admin-pass-input').value = '';
+  // Credential Management API: 保存済みパスワードを自動入力
+  if (window.PasswordCredential && navigator.credentials) {
+    navigator.credentials.get({ password: true, mediation: 'optional' })
+      .then(cred => {
+        if (cred && cred.type === 'password') {
+          document.getElementById('admin-pass-input').value = cred.password;
+        }
+      }).catch(() => {});
+  }
   setTimeout(() => document.getElementById('admin-pass-input').focus(), 100);
 }
 function closeAdminLogin() {
@@ -1245,6 +1257,15 @@ function submitAdminLogin() {
   const val = document.getElementById('admin-pass-input').value;
   if (val === ADMIN_PASS) {
     adminMode = true;
+    // Credential Management API: Googleパスワードマネージャーに保存を促す
+    if (window.PasswordCredential && navigator.credentials) {
+      const cred = new window.PasswordCredential({
+        id: 'murayan-admin',
+        password: val,
+        name: '管理者'
+      });
+      navigator.credentials.store(cred).catch(() => {});
+    }
     closeAdminLogin();
     document.getElementById('admin-banner').style.display = 'block';
     render();
@@ -1300,14 +1321,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     const snap = await DB_REF.once('value');
     const existing = snap.val();
 
-    if (!existing) {
+    if (!existing || !existing.initialized) {
       // 完全に空（初回のみ）シードデータを書き込む
       DB = seed();
       await DB_REF.set(DB);
     } else {
       // データあり（削除で blocks が空でも再シードしない）
       DB = normalize(existing);
-      if (!DB.blocks) DB.blocks = [];
     }
 
     loading.style.display = 'none';
@@ -1317,7 +1337,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // リアルタイム同期（誰かが登録・通報したら全員に即反映）
     DB_REF.on('value', snap => {
       const data = snap.val();
-      if (data && data.blocks) {
+      if (data && data.initialized) {
         DB = normalize(data);
         render();
         renderReports();
