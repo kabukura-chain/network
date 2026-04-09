@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>株クラ Twitter Network — 信頼の連鎖</title>
+  <title>リアル人間株クラチェーン</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -274,6 +274,21 @@
       border-color: var(--r);
       color: var(--r);
     }
+    .report-explain {
+      background: rgba(255,68,0,0.05);
+      border: 1px solid rgba(255,68,0,0.2);
+      border-left: 3px solid rgba(255,68,0,0.5);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 0.72rem;
+      line-height: 1.8;
+      color: #cc7755;
+    }
+    .report-explain p { margin-bottom: 6px; }
+    .report-explain ul { padding-left: 16px; }
+    .report-explain li { margin-bottom: 2px; }
+    .report-explain strong { color: var(--r); }
+
     .report-btn {
       width: 100%;
       padding: 12px;
@@ -427,8 +442,8 @@
   <!-- HEADER -->
   <header class="site-header">
     <span class="logo-icon">⛓</span>
-    <h1 class="site-title">株クラ NETWORK</h1>
-    <p class="site-sub">〜 信頼の連鎖 / TRUST CHAIN 〜</p>
+    <h1 class="site-title">リアル人間株クラチェーン</h1>
+    <p class="site-sub">〜 信頼でつながる株クラコミュニティ 〜</p>
   </header>
 
   <!-- INFO -->
@@ -436,7 +451,7 @@
     <span class="hi">「株やってるやつはTwitterやってないとかモグリ！」</span><br>
     株クラ界隈ではTwitter（X）は必須ツール。でも初心者には誰をフォローすればいいかわからない。<br>
     <span class="hi">BOT・詐欺師・情報商材屋・AIゾンビ</span>が山ほどいる中、
-    信頼できる仲間だけがブロックチェーンのようにつながるネットワーク。
+    信頼できる仲間だけがリアル人間株クラチェーンとしてつながるネットワーク。
   </div>
 
   <!-- HOW TO USE -->
@@ -465,11 +480,11 @@
   <div class="stats">
     <div class="stat"><span class="stat-val" id="cnt-nodes">0</span>ノード数</div>
     <div class="stat"><span class="stat-val" id="cnt-links">0</span>コネクション</div>
-    <div class="stat"><span class="stat-val" id="cnt-blocks">0</span>ブロック数</div>
+    <div class="stat"><span class="stat-val" id="cnt-blocks">0</span>参加者数</div>
   </div>
 
   <!-- NETWORK -->
-  <p class="sec">// BLOCKCHAIN NETWORK</p>
+  <p class="sec">// リアル人間株クラチェーン ネットワーク図</p>
   <div class="net-wrap" id="net-wrap">
     <svg id="net-svg"></svg>
     <div id="tooltip"></div>
@@ -477,27 +492,27 @@
   </div>
 
   <!-- FORM -->
-  <p class="sec">// ブロックチェーンに参加する</p>
+  <p class="sec">// チェーンに参加する</p>
   <div class="form-card">
     <h2>[ あなたのおすすめを登録（1〜3人）]</h2>
     <div class="field">
-      <label>あなたの Twitter @ハンドル</label>
-      <input type="text" id="f-me" placeholder="@むらやん" autocomplete="off" autocorrect="off" spellcheck="false">
+      <label>あなたの Twitter @ハンドル（@あり・なしどちらでもOK）</label>
+      <input type="text" id="f-me" placeholder="@むらやん または むらやん" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-    <div class="divider">─── おすすめ3人（最低1人）───</div>
+    <div class="divider">─── おすすめ（1〜3人、@あり・なしどちらでもOK）───</div>
     <div class="field">
       <label>おすすめ 1人目</label>
-      <input type="text" id="f-r1" placeholder="@kabu_san_A" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="f-r1" placeholder="@kabu_san_A または kabu_san_A" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="field">
       <label>おすすめ 2人目</label>
-      <input type="text" id="f-r2" placeholder="@sakimono_san_B" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="f-r2" placeholder="@sakimono_san_B または sakimono_san_B" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="field">
       <label>おすすめ 3人目</label>
-      <input type="text" id="f-r3" placeholder="@bit_san_C" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="f-r3" placeholder="@bit_san_C または bit_san_C" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-    <button class="submit-btn" onclick="addBlock()">ブロックチェーンに追加する</button>
+    <button class="submit-btn" onclick="addBlock()">チェーンに追加する</button>
   </div>
 
   <!-- WARNING -->
@@ -509,13 +524,22 @@
   <p class="sec">// 不正アカウント通報フォーム</p>
   <div class="report-card">
     <h2>[ BOT・詐欺師・情報商材屋・AIゾンビを通報 ]</h2>
-    <div class="field">
-      <label>あなたの @ハンドル（通報者）</label>
-      <input type="text" id="r-me" placeholder="@あなたのhandle" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="report-explain">
+      <p>⚠ このネットワークの信頼を守るための通報フォームです。</p>
+      <ul>
+        <li>通報されたアカウントは<strong>通報状況</strong>に進捗が表示されます</li>
+        <li><strong>5名以上</strong>が同じアカウントを通報すると、自動的にネットワークから削除されます</li>
+        <li>同じ人が同じアカウントを2回以上通報することはできません</li>
+        <li>@あり・なしどちらの入力でも登録されます</li>
+      </ul>
     </div>
     <div class="field">
-      <label>通報する @ハンドル</label>
-      <input type="text" id="r-target" placeholder="@通報対象のhandle" autocomplete="off" autocorrect="off" spellcheck="false">
+      <label>あなたの @ハンドル（通報者 / @あり・なしどちらでもOK）</label>
+      <input type="text" id="r-me" placeholder="@あなたのhandle または あなたのhandle" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>通報する @ハンドル（@あり・なしどちらでもOK）</label>
+      <input type="text" id="r-target" placeholder="@通報対象のhandle または 通報対象のhandle" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="field">
       <label>理由（複数選択可）</label>
@@ -537,8 +561,8 @@
   </div>
 
   <footer>
-    株クラ Twitter Network — Powered by TRUST &amp; BLOCKCHAIN CONCEPT<br>
-    ブロックチェーン概念による信頼ネットワーク ― デモ版
+    リアル人間株クラチェーン — 信頼でつながる株クラコミュニティ<br>
+    本物の株クラ民だけがつながるリアル人間ネットワーク ― デモ版
   </footer>
 </main>
 
@@ -882,7 +906,7 @@ function addBlock() {
   document.getElementById('f-r2').value = '';
   document.getElementById('f-r3').value = '';
 
-  toast(`@${me} をブロックチェーンに追加しました！`);
+  toast(`@${me} をチェーンに追加しました！`);
 }
 
 /* ================================================================
