@@ -237,6 +237,111 @@
     }
     .warn-card p { color: #ff8855; }
 
+    /* ── REPORT ── */
+    .report-card {
+      background: rgba(40,0,0,0.4);
+      border: 1px solid rgba(255,68,0,0.25);
+      padding: 18px 16px;
+      margin: 10px 0;
+    }
+    .report-card h2 {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: var(--r);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(255,68,0,0.25);
+    }
+    .report-reason {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .reason-btn {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid rgba(255,68,0,0.35);
+      color: #ff8855;
+      font-family: inherit;
+      font-size: 0.65rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+    }
+    .reason-btn.selected, .reason-btn:active {
+      background: rgba(255,68,0,0.25);
+      border-color: var(--r);
+      color: var(--r);
+    }
+    .report-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--r);
+      color: var(--r);
+      font-family: inherit;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: all 0.2s;
+    }
+    .report-btn:hover, .report-btn:active {
+      background: var(--r);
+      color: #fff;
+    }
+    .report-list {
+      margin-top: 16px;
+    }
+    .report-list h3 {
+      font-size: 0.62rem;
+      letter-spacing: 3px;
+      color: rgba(255,68,0,0.6);
+      margin-bottom: 8px;
+    }
+    .report-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,68,0,0.15);
+      margin-bottom: 6px;
+      font-size: 0.7rem;
+    }
+    .report-handle { color: #ff8855; flex: 1; }
+    .report-bar-wrap {
+      flex: 1;
+      background: rgba(255,68,0,0.1);
+      height: 6px;
+      position: relative;
+      border: 1px solid rgba(255,68,0,0.2);
+    }
+    .report-bar {
+      height: 100%;
+      background: var(--r);
+      transition: width 0.4s;
+    }
+    .report-count { color: var(--r); font-size: 0.65rem; min-width: 30px; text-align: right; }
+    .ban-list {
+      margin-top: 12px;
+    }
+    .ban-list h3 {
+      font-size: 0.62rem;
+      letter-spacing: 3px;
+      color: rgba(255,68,0,0.6);
+      margin-bottom: 8px;
+    }
+    .ban-item {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid rgba(255,68,0,0.3);
+      color: rgba(255,68,0,0.5);
+      font-size: 0.68rem;
+      margin: 3px 3px 3px 0;
+      text-decoration: line-through;
+    }
+
     /* ── NOTE ── */
     .note-card {
       border: 1px solid rgba(0,255,65,0.15);
@@ -400,6 +505,33 @@
     <h3>⚠ 排除対象</h3>
     <p>BOT・詐欺師・情報商材屋・AIインプゾンビは紹介しないでください。このネットワークの価値は参加者の信頼で守られています。本物だと確信できる人だけを紹介してください。</p>
   </div>
+  <!-- REPORT FORM -->
+  <p class="sec">// 不正アカウント通報フォーム</p>
+  <div class="report-card">
+    <h2>[ BOT・詐欺師・情報商材屋・AIゾンビを通報 ]</h2>
+    <div class="field">
+      <label>あなたの @ハンドル（通報者）</label>
+      <input type="text" id="r-me" placeholder="@あなたのhandle" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>通報する @ハンドル</label>
+      <input type="text" id="r-target" placeholder="@通報対象のhandle" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>理由（複数選択可）</label>
+      <div class="report-reason" id="reason-btns">
+        <button class="reason-btn" onclick="toggleReason(this)">BOT</button>
+        <button class="reason-btn" onclick="toggleReason(this)">詐欺師</button>
+        <button class="reason-btn" onclick="toggleReason(this)">情報商材屋</button>
+        <button class="reason-btn" onclick="toggleReason(this)">AIゾンビ</button>
+        <button class="reason-btn" onclick="toggleReason(this)">その他</button>
+      </div>
+    </div>
+    <button class="report-btn" onclick="addReport()">⚠ 通報する</button>
+    <div class="report-list" id="report-list"></div>
+    <div class="ban-list" id="ban-list"></div>
+  </div>
+
   <div class="note-card">
     <p>📷 アイコンはX（Twitter）から自動取得されますが、アカウントの設定や状況により取得できない場合があります。その際は代替アイコンが表示されます。</p>
   </div>
@@ -454,8 +586,12 @@
 ================================================================ */
 const KEY = 'kabu_net_v2';
 
+const REPORT_THRESHOLD = 5;
+
 function seed() {
   return {
+    reports: {},
+    banned: [],
     blocks: [
       { id: 'murayan',        handle: 'murayan',        recs: ['kabu_taro', 'sakimono_hana', 'bit_jiro'],   ts: Date.now() - 172800000 },
       { id: 'kabu_taro',      handle: 'kabu_taro',      recs: ['nikkei_bob', 'etf_alice', 'div_ken'],       ts: Date.now() - 86400000  },
@@ -467,7 +603,14 @@ function seed() {
 }
 
 function load() {
-  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.blocks) return d; } catch (e) {}
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && d.blocks) {
+      if (!d.reports) d.reports = {};
+      if (!d.banned)  d.banned  = [];
+      return d;
+    }
+  } catch (e) {}
   return seed();
 }
 function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
@@ -477,12 +620,13 @@ let DB = load();
 function toGraph(blocks) {
   const nm = new Map();
   const links = [];
+  const banned = new Set(DB.banned || []);
   const addNode = (id, handle, reg) => {
-    if (!nm.has(id)) nm.set(id, { id, handle, reg, deg: 0 });
+    if (!nm.has(id) && !banned.has(id)) nm.set(id, { id, handle, reg, deg: 0 });
   };
-  blocks.forEach(b => {
+  blocks.filter(b => !banned.has(b.id)).forEach(b => {
     addNode(b.id, b.handle, true);
-    b.recs.forEach(r => {
+    b.recs.filter(r => !banned.has(r)).forEach(r => {
       addNode(r, r, false);
       nm.get(b.id).deg++;
       links.push({ source: b.id, target: r });
@@ -742,9 +886,83 @@ function addBlock() {
 }
 
 /* ================================================================
+   REPORT
+================================================================ */
+function toggleReason(btn) {
+  btn.classList.toggle('selected');
+}
+
+function addReport() {
+  const reporter = norm(document.getElementById('r-me').value);
+  const target   = norm(document.getElementById('r-target').value);
+  const reasons  = [...document.querySelectorAll('.reason-btn.selected')].map(b => b.textContent);
+
+  if (!reporter) { toast('あなたのハンドルを入力してください', false); return; }
+  if (!target)   { toast('通報対象のハンドルを入力してください', false); return; }
+  if (reporter === target) { toast('自分自身は通報できません', false); return; }
+  if (DB.banned.includes(target)) { toast(`@${target} はすでに削除済みです`, false); return; }
+
+  if (!DB.reports[target]) DB.reports[target] = [];
+  if (DB.reports[target].includes(reporter)) {
+    toast(`@${target} はすでに通報済みです`, false); return;
+  }
+
+  DB.reports[target].push(reporter);
+  const count = DB.reports[target].length;
+
+  if (count >= REPORT_THRESHOLD) {
+    DB.banned.push(target);
+    DB.blocks = DB.blocks.filter(b => b.id !== target);
+    DB.blocks.forEach(b => { b.recs = b.recs.filter(r => r !== target); });
+    save(DB);
+    render();
+    renderReports();
+    toast(`@${target} が${REPORT_THRESHOLD}名以上の通報により自動削除されました`);
+  } else {
+    save(DB);
+    renderReports();
+    toast(`@${target} を通報しました（${count}/${REPORT_THRESHOLD}）`);
+  }
+
+  document.getElementById('r-me').value = '';
+  document.getElementById('r-target').value = '';
+  document.querySelectorAll('.reason-btn.selected').forEach(b => b.classList.remove('selected'));
+}
+
+function renderReports() {
+  // 通報中リスト（未BAN、1件以上）
+  const listEl = document.getElementById('report-list');
+  const pending = Object.entries(DB.reports)
+    .filter(([h]) => !DB.banned.includes(h) && DB.reports[h].length > 0)
+    .sort((a, b) => b[1].length - a[1].length);
+
+  if (pending.length === 0) {
+    listEl.innerHTML = '';
+  } else {
+    listEl.innerHTML = `<h3>// 通報状況</h3>` + pending.map(([h, reporters]) => {
+      const pct = Math.min(100, (reporters.length / REPORT_THRESHOLD) * 100);
+      return `<div class="report-item">
+        <span class="report-handle">@${h}</span>
+        <div class="report-bar-wrap"><div class="report-bar" style="width:${pct}%"></div></div>
+        <span class="report-count">${reporters.length}/${REPORT_THRESHOLD}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // BANリスト
+  const banEl = document.getElementById('ban-list');
+  if (DB.banned.length === 0) {
+    banEl.innerHTML = '';
+  } else {
+    banEl.innerHTML = `<h3>// 削除済みアカウント</h3>` +
+      DB.banned.map(h => `<span class="ban-item">@${h}</span>`).join('');
+  }
+}
+
+/* ================================================================
    INIT
 ================================================================ */
-window.addEventListener('DOMContentLoaded', initSVG);
+window.addEventListener('DOMContentLoaded', () => { initSVG(); renderReports(); });
 window.addEventListener('resize', () => {
   if (!svgEl) return;
   const W = document.getElementById('net-wrap').clientWidth;
