@@ -363,6 +363,44 @@
       text-decoration: line-through;
     }
 
+    /* ── DELETE REQUEST ── */
+    .delete-req-card {
+      border: 1px solid rgba(255,68,0,0.25);
+      background: rgba(255,68,0,0.04);
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .delete-req-title {
+      color: #ff6622;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .delete-req-body {
+      color: #997766;
+      font-size: 0.7rem;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+    .delete-req-btn {
+      display: block;
+      text-align: center;
+      padding: 11px;
+      border: 1px solid rgba(255,68,0,0.4);
+      color: #ff6622;
+      font-family: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .delete-req-btn:hover, .delete-req-btn:active {
+      background: rgba(255,68,0,0.12);
+      border-color: #ff4400;
+      color: #ff4400;
+    }
+
     /* ── NOTE ── */
     .note-card {
       border: 1px solid rgba(0,255,65,0.15);
@@ -873,6 +911,17 @@
   <!-- NOTE -->
   <div class="note-card">
     <p>📷 アイコンはX（Twitter）から自動取得されますが、アカウントの設定や状況により取得できない場合があります。その際は代替アイコンが表示されます。</p>
+  </div>
+
+  <!-- DELETE REQUEST -->
+  <div class="delete-req-card">
+    <p class="delete-req-title">⚠ 身に覚えのない登録・削除申請</p>
+    <p class="delete-req-body">乗っ取り・なりすまし等により無断で登録された場合は、管理者までDMにてご連絡ください。ハンドル名と削除理由を添えてお送りいただければ対応します。</p>
+    <a class="delete-req-btn"
+       href="https://x.com/messages/compose?recipient_id=cadillac600"
+       target="_blank" rel="noopener noreferrer">
+      ✉ @cadillac600 にDMで削除申請する
+    </a>
   </div>
 
   <!-- FORM -->
