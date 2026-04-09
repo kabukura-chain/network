@@ -607,6 +607,125 @@
     }
     .share-close:hover { color: var(--g); border-color: var(--g); }
 
+    /* ── INVITE CODE REVEAL MODAL ── */
+    .code-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,8,0,0.92);
+      z-index: 600;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .code-box {
+      background: #000a00;
+      border: 1px solid var(--g);
+      box-shadow: 0 0 40px rgba(0,255,65,0.2);
+      padding: 24px 20px;
+      max-width: 380px; width: 100%;
+    }
+    .code-box h2 {
+      color: var(--g); font-size: 0.82rem;
+      letter-spacing: 4px; margin-bottom: 6px;
+    }
+    .code-box p.code-sub {
+      color: #669966; font-size: 0.7rem;
+      letter-spacing: 1px; margin-bottom: 16px; line-height: 1.7;
+    }
+    .code-item {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .code-val {
+      flex: 1; background: rgba(0,255,65,0.06);
+      border: 1px solid rgba(0,255,65,0.3);
+      color: var(--g); font-family: inherit;
+      font-size: 0.9rem; letter-spacing: 3px;
+      padding: 10px 12px; font-weight: bold;
+    }
+    .code-copy-btn {
+      background: transparent; border: 1px solid #1a4a1a;
+      color: #669966; font-family: inherit;
+      font-size: 0.65rem; padding: 9px 12px;
+      cursor: pointer; letter-spacing: 1px; white-space: nowrap;
+    }
+    .code-copy-btn:active { background: #001a00; }
+    .code-note {
+      color: #ff4400; font-size: 0.68rem;
+      letter-spacing: 1px; margin: 14px 0 16px;
+      line-height: 1.7;
+    }
+
+    /* ── ADMIN CODE PANEL ── */
+    .code-panel-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,8,0,0.92);
+      z-index: 550;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto;
+    }
+    .code-panel-box {
+      background: #000a00;
+      border: 1px solid #ff4400;
+      box-shadow: 0 0 30px rgba(255,68,0,0.15);
+      padding: 24px 20px;
+      max-width: 440px; width: 100%;
+      margin: auto;
+    }
+    .code-panel-box h2 {
+      color: #ff4400; font-size: 0.82rem;
+      letter-spacing: 4px; margin-bottom: 20px;
+    }
+    .cp-section { margin-bottom: 22px; }
+    .cp-label {
+      color: #669966; font-size: 0.68rem;
+      letter-spacing: 2px; margin-bottom: 10px;
+    }
+    .cp-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .cp-input {
+      flex: 1; background: #000a00;
+      border: 1px solid #1a3a1a; color: var(--g);
+      font-family: inherit; font-size: 0.78rem;
+      padding: 8px 10px;
+    }
+    .cp-input::placeholder { color: #1a3a1a; }
+    .cp-btn {
+      background: #ff4400; border: none; color: #000;
+      font-family: inherit; font-size: 0.72rem;
+      font-weight: bold; padding: 8px 14px;
+      cursor: pointer; letter-spacing: 1px; white-space: nowrap;
+    }
+    .cp-btn-green {
+      background: var(--g); border: none; color: #000;
+      font-family: inherit; font-size: 0.72rem;
+      font-weight: bold; padding: 8px 14px;
+      cursor: pointer; letter-spacing: 1px;
+    }
+    .depth-row { display: flex; gap: 8px; align-items: center; }
+    .depth-input {
+      width: 60px; background: #000a00;
+      border: 1px solid #1a3a1a; color: var(--g);
+      font-family: inherit; font-size: 0.9rem;
+      padding: 8px; text-align: center;
+    }
+    .depth-label { color: #669966; font-size: 0.72rem; }
+    .code-table { width: 100%; border-collapse: collapse; font-size: 0.66rem; }
+    .code-table th {
+      color: #669966; border-bottom: 1px solid #1a3a1a;
+      padding: 5px 4px; text-align: left; letter-spacing: 1px;
+    }
+    .code-table td {
+      color: var(--g); border-bottom: 1px solid #001500;
+      padding: 6px 4px; word-break: break-all;
+    }
+    .code-table td.used { color: #333; text-decoration: line-through; }
+    .code-table td.code-str { font-weight: bold; letter-spacing: 2px; }
+    .cp-close-btn {
+      display: block; width: 100%;
+      background: transparent; border: 1px solid #1a3a1a;
+      color: #557755; font-family: inherit;
+      font-size: 0.72rem; letter-spacing: 2px;
+      padding: 10px; cursor: pointer; margin-top: 10px;
+    }
+
     /* ── TOAST ── */
     .toast {
       position: fixed;
@@ -764,6 +883,10 @@
       <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:4px" aria-hidden="true"><polygon points="12,2 23,21 1,21" fill="#f5a623" stroke="#c8821a" stroke-width="1.2"/><text x="12" y="18" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a1a1a">!</text></svg>1名〜3名の登録は不正登録を防ぐために<strong>1回限り</strong>の登録になります。（1名だけ登録して後で残りの2名を増やしたい場合は管理者に連絡する必要があります。）3名とチェーンでつながってる状態をおすすめします。
     </p>
     <div class="field">
+      <label>招待コード（紹介者から受け取ったコードを入力）</label>
+      <input type="text" id="f-code" placeholder="KBK-XXXX" autocomplete="off" autocorrect="off" spellcheck="false" style="letter-spacing:3px;text-transform:uppercase">
+    </div>
+    <div class="field">
       <label>あなたの X（Twitter）@ハンドル（@あり・なしどちらでもOK）</label>
       <input type="text" id="f-me" placeholder="@あなたのハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
@@ -834,8 +957,54 @@
 <!-- ADMIN BANNER -->
 <div id="admin-banner" style="display:none">
   <div class="admin-banner">
-    ⚙ 管理者モード &nbsp;—&nbsp; アイコンの <strong>✕</strong> をタップして削除
-    <button onclick="exitAdminMode()" class="admin-exit-btn">終了</button>
+    ⚙ 管理者モード &nbsp;—&nbsp; <strong>✕</strong> 削除 &nbsp;／&nbsp; <strong>✎</strong> 推薦編集
+    <span style="display:flex;gap:8px">
+      <button onclick="openCodePanel()" class="admin-exit-btn">コード管理</button>
+      <button onclick="exitAdminMode()" class="admin-exit-btn">終了</button>
+    </span>
+  </div>
+</div>
+
+<!-- CODE REVEAL MODAL（登録後に招待コードを表示） -->
+<div id="code-modal" class="code-modal" style="display:none">
+  <div class="code-box">
+    <h2>[ 登録完了 — あなたの招待コード ]</h2>
+    <p class="code-sub">紹介する3名にDMでそれぞれ1枚ずつ送ってください。<br>コードは1回限り有効です。</p>
+    <div id="code-list"></div>
+    <p class="code-note">⚠ このコードは今後表示されません。必ずメモまたはスクショを取ってください。</p>
+    <button class="share-close" onclick="closeCodeModal()">閉じる（シェア画面へ）</button>
+  </div>
+</div>
+
+<!-- ADMIN CODE PANEL -->
+<div id="code-panel-modal" class="code-panel-modal" style="display:none">
+  <div class="code-panel-box">
+    <h2>[ 招待コード管理 ]</h2>
+
+    <div class="cp-section">
+      <p class="cp-label">// 段数設定（現在の最大段数）</p>
+      <div class="depth-row">
+        <input type="number" class="depth-input" id="cp-depth" min="1" max="10" value="4">
+        <span class="depth-label">段まで</span>
+        <button class="cp-btn-green" onclick="saveMaxDepth()">保存</button>
+      </div>
+    </div>
+
+    <div class="cp-section">
+      <p class="cp-label">// 招待コード発行（1段目用）</p>
+      <div class="cp-row">
+        <input type="text" class="cp-input" id="cp-for-handle" placeholder="対象ハンドル（任意）" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="cp-btn" onclick="adminGenerateCode()">発行</button>
+      </div>
+      <div id="cp-generated" style="color:var(--g);font-size:0.82rem;letter-spacing:3px;min-height:24px"></div>
+    </div>
+
+    <div class="cp-section">
+      <p class="cp-label">// コード一覧</p>
+      <div id="cp-code-list" style="overflow-x:auto"></div>
+    </div>
+
+    <button class="cp-close-btn" onclick="closeCodePanel()">閉じる</button>
   </div>
 </div>
 
@@ -955,18 +1124,23 @@ let adminMode = false;
 function seed() {
   return {
     initialized: true,
+    settings: { maxDepth: 4 },
     reports: {},
     banned: [],
+    invites: {},
     blocks: [
-      { id: 'cadillac600', handle: 'cadillac600', recs: ['tesuta001', 'AbaneChan', 'cissan_9984'], ts: Date.now() - 172800000 }
+      { id: 'cadillac600', handle: 'cadillac600', recs: ['tesuta001', 'AbaneChan', 'cissan_9984'], depth: 1, ts: Date.now() - 172800000 }
     ]
   };
 }
 
 function normalize(data) {
-  if (!data.reports) data.reports = {};
-  if (!data.banned)  data.banned  = [];
-  if (!data.blocks)  data.blocks  = [];
+  if (!data.reports)  data.reports  = {};
+  if (!data.banned)   data.banned   = [];
+  if (!data.blocks)   data.blocks   = [];
+  if (!data.invites)  data.invites  = {};
+  if (!data.settings) data.settings = { maxDepth: 4 };
+  if (!data.settings.maxDepth) data.settings.maxDepth = 4;
   data.initialized = true;
   return data;
 }
@@ -1263,36 +1437,164 @@ function toast(msg, ok = true) {
   setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+/* ── 招待コードユーティリティ ── */
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = 'KBK-';
+  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function makeCodesForUser(handle, userDepth) {
+  const maxDepth = (DB.settings && DB.settings.maxDepth) || 4;
+  if (userDepth >= maxDepth) return []; // 最大段数に達したのでコード発行しない
+  const codes = [];
+  for (let i = 0; i < 3; i++) {
+    let code;
+    do { code = generateCode(); } while (DB.invites[code]);
+    DB.invites[code] = { code, generatedBy: handle, depth: userDepth + 1, used: false, usedBy: null, ts: Date.now() };
+    codes.push(code);
+  }
+  return codes;
+}
+
 function addBlock() {
+  const codeRaw = document.getElementById('f-code').value.trim().toUpperCase();
   const me = norm(document.getElementById('f-me').value);
   const r1 = norm(document.getElementById('f-r1').value);
   const r2 = norm(document.getElementById('f-r2').value);
   const r3 = norm(document.getElementById('f-r3').value);
 
+  if (!codeRaw) { toast('招待コードを入力してください', false); return; }
   if (!me) { toast('あなたのハンドルを入力してください', false); return; }
   if (!/^[a-zA-Z0-9_]{1,50}$/.test(me)) { toast('ハンドルは英数字と_のみ使用可', false); return; }
 
+  // 招待コード検証
+  const invite = DB.invites[codeRaw];
+  if (!invite) { toast('招待コードが無効です', false); return; }
+  if (invite.used) { toast('このコードはすでに使用済みです', false); return; }
+  const maxDepth = (DB.settings && DB.settings.maxDepth) || 4;
+  if (invite.depth > maxDepth) { toast('このコードは現在使用できません', false); return; }
+
   const recs = [r1, r2, r3].filter(r => r.length > 0);
   if (recs.length === 0) { toast('最低1人のおすすめを入力してください', false); return; }
-
   for (const r of recs) {
     if (!/^[a-zA-Z0-9_]{1,50}$/.test(r)) { toast(`@${r} は無効なハンドルです`, false); return; }
   }
-
   if (DB.blocks.find(b => b.id === me)) { toast(`@${me} はすでに登録済みです`, false); return; }
   if (recs.includes(me)) { toast('自分自身は推薦できません', false); return; }
 
-  DB.blocks.push({ id: me, handle: me, recs, ts: Date.now() });
+  // コード使用済みにして登録
+  invite.used = true;
+  invite.usedBy = me;
+  DB.blocks.push({ id: me, handle: me, recs, depth: invite.depth, ts: Date.now() });
+
+  // 次段のコードを3枚発行
+  const newCodes = makeCodesForUser(me, invite.depth);
+
   save(DB);
   render();
   if (sim) sim.alpha(0.6).restart();
 
+  document.getElementById('f-code').value = '';
   document.getElementById('f-me').value = '';
   document.getElementById('f-r1').value = '';
   document.getElementById('f-r2').value = '';
   document.getElementById('f-r3').value = '';
 
-  showShare(me, recs);
+  if (newCodes.length > 0) {
+    showCodeModal(newCodes, me, recs);
+  } else {
+    showShare(me, recs);
+  }
+}
+
+/* ── コード表示モーダル ── */
+function showCodeModal(codes, me, recs) {
+  const list = document.getElementById('code-list');
+  list.innerHTML = '';
+  codes.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'code-item';
+    item.innerHTML = `
+      <div class="code-val">${c}</div>
+      <button class="code-copy-btn" onclick="copyCode('${c}', this)">コピー</button>`;
+    list.appendChild(item);
+  });
+  document.getElementById('code-modal').style.display = 'flex';
+  // 閉じたらシェア画面へ
+  document.getElementById('code-modal')._next = () => showShare(me, recs);
+}
+
+function copyCode(code, btn) {
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✓ コピー済';
+    setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+  }).catch(() => {
+    btn.textContent = '手動コピー';
+  });
+}
+
+function closeCodeModal() {
+  const modal = document.getElementById('code-modal');
+  modal.style.display = 'none';
+  if (modal._next) { modal._next(); modal._next = null; }
+}
+
+/* ── 管理者コードパネル ── */
+function openCodePanel() {
+  const maxDepth = (DB.settings && DB.settings.maxDepth) || 4;
+  document.getElementById('cp-depth').value = maxDepth;
+  document.getElementById('cp-generated').textContent = '';
+  document.getElementById('cp-for-handle').value = '';
+  renderCodeList();
+  document.getElementById('code-panel-modal').style.display = 'flex';
+}
+
+function closeCodePanel() {
+  document.getElementById('code-panel-modal').style.display = 'none';
+}
+
+function saveMaxDepth() {
+  const val = parseInt(document.getElementById('cp-depth').value);
+  if (isNaN(val) || val < 1 || val > 10) { toast('段数は1〜10で入力してください', false); return; }
+  if (!DB.settings) DB.settings = {};
+  DB.settings.maxDepth = val;
+  save(DB);
+  toast(`最大段数を ${val} 段に設定しました`);
+}
+
+function adminGenerateCode() {
+  const forHandle = norm(document.getElementById('cp-for-handle').value) || '（指定なし）';
+  let code;
+  do { code = generateCode(); } while (DB.invites[code]);
+  DB.invites[code] = { code, generatedBy: 'admin', depth: 1, used: false, usedBy: null, forHandle, ts: Date.now() };
+  save(DB);
+  document.getElementById('cp-generated').textContent = `発行: ${code}`;
+  renderCodeList();
+}
+
+function renderCodeList() {
+  const invites = DB.invites || {};
+  const keys = Object.keys(invites).sort((a, b) => (invites[b].ts || 0) - (invites[a].ts || 0));
+  if (keys.length === 0) {
+    document.getElementById('cp-code-list').innerHTML = '<p style="color:#1a4a1a;font-size:0.7rem">コードなし</p>';
+    return;
+  }
+  let html = `<table class="code-table">
+    <tr><th>コード</th><th>段</th><th>発行者</th><th>使用者</th></tr>`;
+  keys.forEach(k => {
+    const iv = invites[k];
+    const usedClass = iv.used ? 'used' : '';
+    html += `<tr>
+      <td class="code-str ${usedClass}">${iv.code}</td>
+      <td class="${usedClass}">${iv.depth}</td>
+      <td class="${usedClass}">@${iv.generatedBy}</td>
+      <td class="${usedClass}">${iv.used ? '@' + iv.usedBy : '未使用'}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  document.getElementById('cp-code-list').innerHTML = html;
 }
 
 /* ================================================================
@@ -1501,7 +1803,7 @@ function deleteBlock(id) {
 ================================================================ */
 function showShare(me, recs) {
   const handles = recs.map(r => '@' + r).join(' ');
-  const url = 'https://cadillac600.github.io/kabu-twitter-network/';
+  const url = 'https://kabukura-chain.github.io/network/';
   const text = `${handles}\n@${me}さんから株クラNetworkに登録されました！\n信頼できる株クラを1〜3名紹介登録してみてね！\n株クラNetwork\n${url}`;
 
   document.getElementById('share-preview').textContent = text;
