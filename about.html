@@ -570,6 +570,7 @@ function drawConv(){
     {label:'@sp500_emma',   seed:'sp500EmmaYoung',   type:'green'},
     {label:'@macro_ryu',    seed:'macroRyuMid',      type:'green'},
     {label:'@hedge_anna',   seed:'hedgeAnnaPro',     type:'blue'},
+    {label:'@legend_kabu',  seed:'legendKabuMaster',  type:'legend'},  // index 12
   ];
 
   const EDGES = [
@@ -580,7 +581,9 @@ function drawConv(){
     [4,9],
     [5,10],
     [6,11],
-    [8,11],[9,10]
+    [8,11],[9,10],
+    // legend node: 5 incoming
+    [0,12],[1,12],[3,12],[7,12],[10,12]
   ];
 
   let W, H;
@@ -593,12 +596,18 @@ function drawConv(){
   }
 
   function initPositions(){
+    const nonLeg = NODES.filter(n=>n.type!=='legend');
     NODES.forEach((n,i)=>{
-      const angle = (i / NODES.length) * Math.PI * 2 - Math.PI/2;
-      const rx = Math.min(W,H) * 0.34;
-      const ry = Math.min(W,H) * 0.28;
-      n.x = W/2 + rx * Math.cos(angle) + (Math.random()-0.5)*30;
-      n.y = H/2 + ry * Math.sin(angle) + (Math.random()-0.5)*20;
+      if(n.type==='legend'){
+        n.x = W/2 + (Math.random()-0.5)*20;
+        n.y = H/2 + (Math.random()-0.5)*20;
+      } else {
+        const angle = (i / nonLeg.length) * Math.PI * 2 - Math.PI/2;
+        const rx = Math.min(W,H) * 0.34;
+        const ry = Math.min(W,H) * 0.28;
+        n.x = W/2 + rx * Math.cos(angle) + (Math.random()-0.5)*30;
+        n.y = H/2 + ry * Math.sin(angle) + (Math.random()-0.5)*20;
+      }
       n.vx = (Math.random()-0.5)*0.3;
       n.vy = (Math.random()-0.5)*0.3;
     });
@@ -675,20 +684,17 @@ function drawConv(){
     /* Edges */
     EDGES.forEach(([a,b])=>{
       const na=NODES[a], nb=NODES[b];
-      /* glow base */
+      const leg = NODES[a].type==='legend'||NODES[b].type==='legend';
+      const ec  = leg ? 'rgba(255,215,0,' : 'rgba(0,255,65,';
+      const sc  = leg ? '#ffd700' : '#00ff41';
       ctx.save();
-      ctx.strokeStyle='rgba(0,255,65,0.07)';
-      ctx.lineWidth=6;
-      ctx.shadowColor='#00ff41';
-      ctx.shadowBlur=12;
+      ctx.strokeStyle=ec+'0.1)'; ctx.lineWidth=leg?8:6;
+      ctx.shadowColor=sc; ctx.shadowBlur=leg?18:12;
       ctx.beginPath(); ctx.moveTo(na.x,na.y); ctx.lineTo(nb.x,nb.y); ctx.stroke();
       ctx.restore();
-      /* dashed animated */
       ctx.save();
-      ctx.strokeStyle='rgba(0,255,65,0.32)';
-      ctx.lineWidth=1;
-      ctx.setLineDash([5,5]);
-      ctx.lineDashOffset=-dashOff;
+      ctx.strokeStyle=ec+(leg?'0.55)':'0.32)'); ctx.lineWidth=leg?1.4:1;
+      ctx.setLineDash([5,5]); ctx.lineDashOffset=-dashOff;
       ctx.beginPath(); ctx.moveTo(na.x,na.y); ctx.lineTo(nb.x,nb.y); ctx.stroke();
       ctx.restore();
     });
@@ -696,42 +702,57 @@ function drawConv(){
     /* Flowing particles */
     particles.forEach(p=>{
       const [a,b]=EDGES[p.ei];
+      const leg = NODES[a].type==='legend'||NODES[b].type==='legend';
       const na=NODES[a], nb=NODES[b];
       const px=na.x+(nb.x-na.x)*p.t;
       const py=na.y+(nb.y-na.y)*p.t;
       ctx.save();
-      ctx.fillStyle='rgba(0,255,65,0.95)';
-      ctx.shadowColor='#00ff41'; ctx.shadowBlur=10;
-      ctx.beginPath(); ctx.arc(px,py,2.2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle= leg ? 'rgba(255,215,0,0.95)' : 'rgba(0,255,65,0.95)';
+      ctx.shadowColor= leg ? '#ffd700' : '#00ff41'; ctx.shadowBlur=10;
+      ctx.beginPath(); ctx.arc(px,py,leg?3:2.2,0,Math.PI*2); ctx.fill();
       ctx.restore();
     });
 
     /* Nodes */
+    const now = Date.now();
     NODES.forEach(n=>{
-      const col  = n.type==='green' ? '#00ff41' : '#00aaff';
-      const gCol = n.type==='green' ? 'rgba(0,255,65,' : 'rgba(0,170,255,';
+      const isLeg = n.type==='legend';
+      const col  = isLeg ? '#ffd700' : (n.type==='green' ? '#00ff41' : '#00aaff');
+      const gCol = isLeg ? 'rgba(255,215,0,' : (n.type==='green' ? 'rgba(0,255,65,' : 'rgba(0,170,255,');
+      const nr   = isLeg ? R + 4 : R;
+
+      /* legend: pulsing outer ring */
+      if(isLeg){
+        const pulse = Math.sin(now/420)*0.5+0.5;
+        ctx.save();
+        ctx.strokeStyle='rgba(255,215,0,'+(0.65*pulse)+')';
+        ctx.lineWidth=1;
+        ctx.shadowColor='#ffd700'; ctx.shadowBlur=24*pulse;
+        ctx.beginPath(); ctx.arc(n.x,n.y, nr+10+pulse*12, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
 
       /* outer ring glow */
       ctx.save();
-      ctx.strokeStyle=col; ctx.lineWidth=1.8;
-      ctx.shadowColor=col; ctx.shadowBlur=16;
-      ctx.beginPath(); ctx.arc(n.x,n.y,R,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle=col; ctx.lineWidth=isLeg?2.5:1.8;
+      ctx.shadowColor=col; ctx.shadowBlur=isLeg?24:16;
+      ctx.beginPath(); ctx.arc(n.x,n.y,nr,0,Math.PI*2); ctx.stroke();
       ctx.restore();
 
       /* background fill */
-      const grad=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,R);
-      grad.addColorStop(0, gCol+'0.14)');
-      grad.addColorStop(1,'rgba(0,5,0,0.92)');
+      const grad=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,nr);
+      grad.addColorStop(0, gCol+(isLeg?'0.22':'0.14')+')');
+      grad.addColorStop(1, isLeg?'rgba(20,12,0,0.95)':'rgba(0,5,0,0.92)');
       ctx.save();
       ctx.fillStyle=grad;
-      ctx.beginPath(); ctx.arc(n.x,n.y,R,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x,n.y,nr,0,Math.PI*2); ctx.fill();
       ctx.restore();
 
       /* avatar or fallback */
       ctx.save();
-      ctx.beginPath(); ctx.arc(n.x,n.y,R-1,0,Math.PI*2); ctx.clip();
+      ctx.beginPath(); ctx.arc(n.x,n.y,nr-1,0,Math.PI*2); ctx.clip();
       if(n.img){
-        ctx.drawImage(n.img, n.x-(R-1), n.y-(R-1), (R-1)*2, (R-1)*2);
+        ctx.drawImage(n.img, n.x-(nr-1), n.y-(nr-1), (nr-1)*2, (nr-1)*2);
       } else {
         ctx.fillStyle=col;
         ctx.font='bold 10px Courier New,monospace';
@@ -742,10 +763,10 @@ function drawConv(){
 
       /* label */
       ctx.save();
-      ctx.font='7px Courier New,monospace';
+      ctx.font= isLeg ? 'bold 8px Courier New,monospace' : '7px Courier New,monospace';
       ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.shadowColor=col; ctx.shadowBlur=5;
-      ctx.fillText(n.label, n.x, n.y+R+4);
+      ctx.shadowColor=col; ctx.shadowBlur=isLeg?14:5;
+      ctx.fillText(isLeg ? '★ '+n.label : n.label, n.x, n.y+nr+4);
       ctx.restore();
     });
   }
