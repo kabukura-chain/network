@@ -848,6 +848,30 @@
     }
     .code-table td.used { color: #333; text-decoration: line-through; }
     .code-table td.code-str { font-weight: bold; letter-spacing: 2px; }
+    .cp-dm-textarea {
+      width: 100%;
+      background: #000500;
+      border: 1px solid rgba(0,255,65,0.3);
+      color: #99dd99;
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      line-height: 1.9;
+      padding: 12px 14px;
+      resize: none;
+      min-height: 180px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .cp-dm-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .cp-dm-btns .cp-btn-green {
+      flex: 1;
+      padding: 10px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+    }
     .cp-close-btn {
       display: block; width: 100%;
       background: transparent; border: 1px solid #1a3a1a;
@@ -1158,6 +1182,16 @@
         <button class="cp-btn" onclick="adminGenerateCode()">発行</button>
       </div>
       <div id="cp-generated" style="color:var(--g);font-size:0.82rem;letter-spacing:3px;min-height:24px"></div>
+    </div>
+
+    <!-- DMテンプレート -->
+    <div class="cp-section" id="cp-dm-section" style="display:none">
+      <p class="cp-label">// DMテンプレート（そのままコピーして送れます）</p>
+      <textarea id="cp-dm-text" class="cp-dm-textarea" readonly></textarea>
+      <div class="cp-dm-btns">
+        <button class="cp-btn-green" onclick="selectDmText()">全選択</button>
+        <button class="cp-btn-green" id="cp-copy-btn" onclick="copyDmText()">コピー</button>
+      </div>
     </div>
 
     <div class="cp-section">
@@ -1767,6 +1801,52 @@ function adminGenerateCode() {
   save(DB);
   document.getElementById('cp-generated').textContent = `発行: ${code}`;
   renderCodeList();
+  showDmTemplate(code);
+}
+
+function showDmTemplate(code) {
+  const tmpl =
+`【株クラ X Network 招待コード】
+
+株クラ界隈の信頼できるアカウントだけがつながる
+招待制ネットワークに招待します！
+
+▼ 招待コード（1回限り有効）
+${code}
+
+▼ 登録はこちら
+https://kabukura-chain.github.io/network/
+
+▼ 登録の流れ
+1. 上のURLを開く
+2. 招待コードを入力
+3. あなたの@ハンドルと
+   信頼できる株クラ仲間を1〜3人入力して登録
+4. 登録完了後、あなたにも3枚の招待コードが届きます
+5. 紹介した仲間にDMでコードを渡してバトンを繋いでください
+
+▼ 仕組みの詳細
+https://kabukura-chain.github.io/network/about.html`;
+
+  document.getElementById('cp-dm-text').value = tmpl;
+  document.getElementById('cp-dm-section').style.display = 'block';
+  document.getElementById('cp-copy-btn').textContent = 'コピー';
+}
+
+function selectDmText() {
+  document.getElementById('cp-dm-text').select();
+}
+
+function copyDmText() {
+  const ta = document.getElementById('cp-dm-text');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    const btn = document.getElementById('cp-copy-btn');
+    btn.textContent = '✓ コピー済';
+    setTimeout(() => { btn.textContent = 'コピー'; }, 2500);
+  }).catch(() => {
+    ta.select();
+    document.execCommand('copy');
+  });
 }
 
 function renderCodeList() {
