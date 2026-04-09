@@ -266,6 +266,34 @@
       line-height: 2;
     }
 
+    /* ── HOW TO USE ── */
+    .how-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .how-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--g3);
+      border: 1px solid rgba(0,255,65,0.12);
+      padding: 10px 12px;
+      font-size: 0.74rem;
+      line-height: 1.7;
+      color: #99cc99;
+    }
+    .how-num {
+      color: var(--g);
+      font-size: 1rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      text-shadow: 0 0 8px var(--g);
+      min-width: 24px;
+    }
+    .hi2 { color: var(--g); font-weight: bold; }
+
     /* ── D3 link animation ── */
     .link-line {
       stroke-dasharray: 6 4;
@@ -296,6 +324,27 @@
     信頼できる仲間だけがブロックチェーンのようにつながるネットワーク。
   </div>
 
+  <!-- HOW TO USE -->
+  <p class="sec">// このネットワークの使い方</p>
+  <div class="how-grid">
+    <div class="how-item">
+      <span class="how-num">01</span>
+      <span class="how-text">あなたの@ハンドルと、信頼できる株クラを<span class="hi2">最低1人〜最大3人</span>入力して登録</span>
+    </div>
+    <div class="how-item">
+      <span class="how-num">02</span>
+      <span class="how-text">ネットワーク図に<span class="hi2">あなたのブロック</span>が追加され、推薦した人とつながって広がる</span>
+    </div>
+    <div class="how-item">
+      <span class="how-num">03</span>
+      <span class="how-text">アイコンを<span class="hi2">タップするとXのアカウントページ</span>が開く。気になる人をすぐフォロー！</span>
+    </div>
+    <div class="how-item">
+      <span class="how-num">04</span>
+      <span class="how-text"><span class="hi2">緑のノード</span>＝登録者、<span style="color:#00aaff">青のノード</span>＝推薦されたアカウント。同じ人が2回登録はできない</span>
+    </div>
+  </div>
+
   <!-- STATS -->
   <p class="sec">// NETWORK STATUS</p>
   <div class="stats">
@@ -315,7 +364,7 @@
   <!-- FORM -->
   <p class="sec">// ブロックチェーンに参加する</p>
   <div class="form-card">
-    <h2>[ あなたのおすすめ3人を登録 ]</h2>
+    <h2>[ あなたのおすすめを登録（1〜3人）]</h2>
     <div class="field">
       <label>あなたの Twitter @ハンドル</label>
       <input type="text" id="f-me" placeholder="@むらやん" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -512,12 +561,19 @@ function render() {
   const ng = gEl.append('g');
   const defs = svgEl.select('defs');
 
+  let dragMoved = false;
   const nodeG = ng.selectAll('g.nd').data(nodes).enter().append('g').attr('class', 'nd')
     .style('cursor', 'pointer')
     .call(d3.drag()
-      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+      .on('start', (e, d) => { dragMoved = false; if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { dragMoved = true; d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => {
+        if (!e.active) sim.alphaTarget(0);
+        d.fx = null; d.fy = null;
+        if (!dragMoved) {
+          window.open(`https://x.com/${d.handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
+        }
+      }))
     .on('mouseover touchstart', showTip)
     .on('mouseout  touchend',  hideTip);
 
@@ -606,6 +662,7 @@ function showTip(event, d) {
   } else {
     html += `<br><span style="color:#669966">推薦されたアカウント</span>`;
   }
+  html += `<br><span style="color:#555;font-size:0.9em">👆 タップでXを開く</span>`;
   tip.innerHTML = html;
   tip.style.opacity = '1';
   const rect = document.getElementById('net-wrap').getBoundingClientRect();
