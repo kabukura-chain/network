@@ -1718,10 +1718,31 @@ function addBlock() {
   for (const r of recs) {
     if (!/^[a-zA-Z0-9_]{1,50}$/.test(r)) { toast(`@${r} は無効なハンドルです`, false); return; }
   }
-  if (DB.blocks.find(b => b.id === me)) { toast(`@${me} はすでに登録済みです`, false); return; }
   if (recs.includes(me)) { toast('自分自身は推薦できません', false); return; }
 
-  // コード使用済みにして登録
+  const existing = DB.blocks.find(b => b.id === me);
+
+  if (existing) {
+    // 追加登録：残ったコードで推薦を追記
+    const added = recs.filter(r => !existing.recs.includes(r));
+    if (added.length === 0) {
+      toast('すでに推薦済みの方のみです。新しい方を入力してください', false); return;
+    }
+    invite.used = true;
+    invite.usedBy = me;
+    existing.recs.push(...added);
+    save(DB);
+    render();
+    if (sim) sim.alpha(0.6).restart();
+    document.getElementById('f-code').value = '';
+    document.getElementById('f-r1').value = '';
+    document.getElementById('f-r2').value = '';
+    document.getElementById('f-r3').value = '';
+    toast(`✓ ${added.map(r => '@' + r).join('、')} を推薦に追加しました！`, true);
+    return;
+  }
+
+  // 新規登録
   invite.used = true;
   invite.usedBy = me;
   DB.blocks.push({ id: me, handle: me, recs, depth: invite.depth, ts: Date.now() });
