@@ -1526,7 +1526,7 @@ const fallbackUrl = (h) => `https://api.dicebear.com/7.x/pixel-art/png?seed=${en
 function initSVG() {
   const wrap = document.getElementById('net-wrap');
   const W = wrap.clientWidth;
-  const H = Math.min(480, Math.max(360, Math.round(window.innerHeight * 0.48)));
+  const H = Math.min(576, Math.max(432, Math.round(window.innerHeight * 0.576)));
 
   svgEl = d3.select('#net-svg').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
 
@@ -2363,7 +2363,7 @@ function resizeGraph(isEntering) {
   } else {
     // 全画面を出るとき：保存しておいた通常時の高さに戻す
     W = wrap.clientWidth;
-    H = normalH || Math.min(480, Math.max(360, Math.round(window.innerHeight * 0.48)));
+    H = normalH || Math.min(576, Math.max(432, Math.round(window.innerHeight * 0.576)));
   }
   svgEl.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
   render();
