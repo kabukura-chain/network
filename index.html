@@ -141,7 +141,7 @@
       font-size: 0.76rem;
       line-height: 1.9;
       color: #99dd99;
-      margin-top: 28px;
+      margin-top: 10px;
     }
     .info-card .hi { color: var(--g); font-weight: bold; }
 
@@ -209,9 +209,9 @@
     }
     .net-fullscreen-btn:hover { background: rgba(0,255,65,0.15); }
     .net-hint {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
+      display: block;
+      text-align: right;
+      margin-top: 6px;
       font-size: 13px;
       color: rgba(0,255,65,0.7);
       pointer-events: none;
@@ -1091,12 +1091,12 @@
     <svg id="net-svg"></svg>
     <div id="tooltip"></div>
     <button class="net-fullscreen-btn" onclick="enterFullscreen()" id="fs-btn">⛶ 全画面</button>
-    <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
     <div id="fs-exit-btn" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); display:none; align-items:center; gap:8px; white-space:nowrap; z-index:10;">
       <span style="font-size:14px; color:rgba(0,255,65,0.8); letter-spacing:1px; border:1px solid rgba(0,255,65,0.45); background:rgba(0,0,0,0.65); padding:5px 14px; pointer-events:none;">ESCで全画面解除または→</span>
       <button onclick="exitFullscreen()" style="background:rgba(0,0,0,0.65); border:1px solid rgba(0,255,65,0.5); color:rgba(0,255,65,0.9); font-size:14px; padding:5px 14px; cursor:pointer; letter-spacing:1px; font-family:inherit; transition:background 0.2s;">全画面解除する</button>
     </div>
   </div>
+  <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
 
   <!-- INFO -->
   <div class="info-card">
