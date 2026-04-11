@@ -1066,8 +1066,10 @@
     <div id="tooltip"></div>
     <button class="net-fullscreen-btn" onclick="enterFullscreen()" id="fs-btn">⛶ 全画面</button>
     <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
-    <div id="fs-esc-hint" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:14px; color:rgba(0,255,65,0.8); letter-spacing:1px; pointer-events:none; white-space:nowrap; border:1px solid rgba(0,255,65,0.45); background:rgba(0,0,0,0.65); padding:5px 16px;">ESC または右上ボタンで全画面解除</div>
-    <button id="fs-exit-btn" onclick="exitFullscreen()" style="display:none; position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.65); border:1px solid rgba(0,255,65,0.5); color:rgba(0,255,65,0.9); font-size:14px; padding:5px 14px; cursor:pointer; letter-spacing:1px; z-index:10; font-family:inherit; transition:background 0.2s;">全画面解除する</button>
+    <div id="fs-exit-btn" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); display:none; align-items:center; gap:8px; white-space:nowrap; z-index:10;">
+      <span style="font-size:14px; color:rgba(0,255,65,0.8); letter-spacing:1px; border:1px solid rgba(0,255,65,0.45); background:rgba(0,0,0,0.65); padding:5px 14px; pointer-events:none;">ESCで全画面解除または→</span>
+      <button onclick="exitFullscreen()" style="background:rgba(0,0,0,0.65); border:1px solid rgba(0,255,65,0.5); color:rgba(0,255,65,0.9); font-size:14px; padding:5px 14px; cursor:pointer; letter-spacing:1px; font-family:inherit; transition:background 0.2s;">全画面解除する</button>
+    </div>
   </div>
 
   <!-- INFO -->
@@ -2345,8 +2347,7 @@ function enterFullscreen() {
     el.classList.add('fake-fullscreen');
     document.body.style.overflow = 'hidden';
     document.getElementById('fs-btn').style.display = 'none';
-    document.getElementById('fs-exit-btn').style.display = 'block';
-    document.getElementById('fs-esc-hint').style.display = 'block';
+    document.getElementById('fs-exit-btn').style.display = 'flex';
     requestAnimationFrame(() => setTimeout(() => resizeGraph(true), 150));
   }
 }
@@ -2357,7 +2358,6 @@ function exitFullscreen() {
     document.body.style.overflow = '';
     document.getElementById('fs-btn').style.display = '';
     document.getElementById('fs-exit-btn').style.display = 'none';
-    document.getElementById('fs-esc-hint').style.display = 'none';
     requestAnimationFrame(() => setTimeout(() => resizeGraph(false), 150));
     return;
   }
@@ -2370,8 +2370,7 @@ document.addEventListener('mozfullscreenchange', onFsChange);
 function onFsChange() {
   const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
   document.getElementById('fs-btn').style.display = isFs ? 'none' : '';
-  document.getElementById('fs-exit-btn').style.display = isFs ? 'block' : 'none';
-  document.getElementById('fs-esc-hint').style.display = isFs ? 'block' : 'none';
+  document.getElementById('fs-exit-btn').style.display = isFs ? 'flex' : 'none';
   requestAnimationFrame(() => setTimeout(() => resizeGraph(isFs), 150));
 }
 </script>
