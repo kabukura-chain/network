@@ -180,10 +180,17 @@
     }
     .net-wrap:-webkit-full-screen { width: 100vw; height: 100vh; }
     .net-wrap:-moz-full-screen    { width: 100vw; height: 100vh; }
-    .net-wrap:fullscreen          { width: 100vw; height: 100vh; }
-    .net-wrap:fullscreen #net-svg,
-    .net-wrap:-webkit-full-screen #net-svg,
-    .net-wrap:-moz-full-screen #net-svg { height: 100vh; }
+    .net-wrap:-webkit-full-screen { width: 100vw !important; height: 100vh !important; }
+    .net-wrap:-moz-full-screen    { width: 100vw !important; height: 100vh !important; }
+    .net-wrap:fullscreen          { width: 100vw !important; height: 100vh !important; }
+    .net-wrap.fake-fullscreen {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 9999 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: #000a00;
+    }
     #net-svg { display: block; width: 100%; }
     .net-fullscreen-btn {
       position: absolute;
@@ -2312,18 +2319,46 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 window.addEventListener('resize', () => {
   if (!svgEl) return;
-  const W = document.getElementById('net-wrap').clientWidth;
+  const wrap = document.getElementById('net-wrap');
+  const W = wrap.clientWidth;
   const H = parseInt(svgEl.attr('height'));
   svgEl.attr('viewBox', `0 0 ${W} ${H}`);
   if (sim) sim.force('center', d3.forceCenter(W / 2, H / 2)).alpha(0.3).restart();
 });
 
+function resizeGraph() {
+  if (!svgEl) return;
+  const wrap = document.getElementById('net-wrap');
+  const W = wrap.clientWidth;
+  const H = wrap.clientHeight || parseInt(svgEl.attr('height'));
+  svgEl.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+  if (sim) sim.force('center', d3.forceCenter(W / 2, H / 2)).alpha(0.3).restart();
+}
+
 function enterFullscreen() {
   const el = document.getElementById('net-wrap');
   const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-  if (req) req.call(el);
+  if (req) {
+    req.call(el);
+  } else {
+    // iOS fallback
+    el.classList.add('fake-fullscreen');
+    document.body.style.overflow = 'hidden';
+    setTimeout(resizeGraph, 100);
+    document.getElementById('fs-btn').style.display = 'none';
+    document.getElementById('fs-exit-btn').style.display = 'block';
+  }
 }
 function exitFullscreen() {
+  const el = document.getElementById('net-wrap');
+  if (el.classList.contains('fake-fullscreen')) {
+    el.classList.remove('fake-fullscreen');
+    document.body.style.overflow = '';
+    setTimeout(resizeGraph, 100);
+    document.getElementById('fs-btn').style.display = '';
+    document.getElementById('fs-exit-btn').style.display = 'none';
+    return;
+  }
   const ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
   if (ex) ex.call(document);
 }
@@ -2334,6 +2369,7 @@ function onFsChange() {
   const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
   document.getElementById('fs-btn').style.display = isFs ? 'none' : '';
   document.getElementById('fs-exit-btn').style.display = isFs ? 'block' : 'none';
+  setTimeout(resizeGraph, 100);
 }
 </script>
 </body>
