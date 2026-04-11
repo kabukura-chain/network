@@ -1508,7 +1508,13 @@ function render() {
         if (!e.active) sim.alphaTarget(0);
         d.fx = null; d.fy = null;
         if (!dragMoved && !adminMode) {
-          window.open(`https://x.com/${d.handle.replace(/^@/, '')}`, '_blank', 'noopener,noreferrer');
+          const a = document.createElement('a');
+          a.href = `https://x.com/${d.handle.replace(/^@/, '')}`;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
         }
       }))
     .on('mouseover touchstart', showTip)
