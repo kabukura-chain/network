@@ -1076,6 +1076,7 @@
     <div id="tooltip"></div>
     <button class="net-fullscreen-btn" onclick="enterFullscreen()" id="fs-btn">⛶ 全画面</button>
     <div class="net-hint">ピンチでズーム ／ ドラッグで移動</div>
+    <div id="fs-esc-hint" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:0.62rem; color:rgba(0,255,65,0.5); letter-spacing:1px; pointer-events:none; white-space:nowrap;">ESC または右下ボタンで全画面解除</div>
   </div>
   <button class="net-exit-btn" id="fs-exit-btn" onclick="exitFullscreen()">✕ 全画面を終了</button>
 
@@ -1488,7 +1489,7 @@ function toGraph(blocks) {
    D3 NETWORK
 ================================================================ */
 const R = 26; // node radius
-let sim, svgEl, gEl;
+let sim, svgEl, gEl, normalH = null;
 
 // Color palette per node
 const LEGEND_MIN = 5;
@@ -2326,17 +2327,25 @@ window.addEventListener('resize', () => {
   if (sim) sim.force('center', d3.forceCenter(W / 2, H / 2)).alpha(0.3).restart();
 });
 
-function resizeGraph() {
+function resizeGraph(isEntering) {
   if (!svgEl) return;
   const wrap = document.getElementById('net-wrap');
-  const W = wrap.clientWidth;
-  const H = wrap.clientHeight > 100 ? wrap.clientHeight : parseInt(svgEl.attr('height'));
+  let W, H;
+  if (isEntering) {
+    // 全画面に入るとき：画面サイズを使用
+    W = window.screen.width || wrap.clientWidth;
+    H = window.screen.height || window.innerHeight;
+  } else {
+    // 全画面を出るとき：保存しておいた通常時の高さに戻す
+    W = wrap.clientWidth;
+    H = normalH || Math.min(480, Math.max(360, Math.round(window.innerHeight * 0.48)));
+  }
   svgEl.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
-  // ノード座標をリセットして新サイズで再描画
   render();
 }
 
 function enterFullscreen() {
+  if (svgEl) normalH = parseInt(svgEl.attr('height')); // 通常時の高さを保存
   const el = document.getElementById('net-wrap');
   const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
   if (req) {
@@ -2347,7 +2356,8 @@ function enterFullscreen() {
     document.body.style.overflow = 'hidden';
     document.getElementById('fs-btn').style.display = 'none';
     document.getElementById('fs-exit-btn').style.display = 'block';
-    requestAnimationFrame(() => setTimeout(resizeGraph, 150));
+    document.getElementById('fs-esc-hint').style.display = 'block';
+    requestAnimationFrame(() => setTimeout(() => resizeGraph(true), 150));
   }
 }
 function exitFullscreen() {
@@ -2357,7 +2367,8 @@ function exitFullscreen() {
     document.body.style.overflow = '';
     document.getElementById('fs-btn').style.display = '';
     document.getElementById('fs-exit-btn').style.display = 'none';
-    requestAnimationFrame(() => setTimeout(resizeGraph, 150));
+    document.getElementById('fs-esc-hint').style.display = 'none';
+    requestAnimationFrame(() => setTimeout(() => resizeGraph(false), 150));
     return;
   }
   const ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
@@ -2370,8 +2381,8 @@ function onFsChange() {
   const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
   document.getElementById('fs-btn').style.display = isFs ? 'none' : '';
   document.getElementById('fs-exit-btn').style.display = isFs ? 'block' : 'none';
-  // DOMが確実に更新されてからリサイズ＆再描画
-  requestAnimationFrame(() => setTimeout(resizeGraph, 150));
+  document.getElementById('fs-esc-hint').style.display = isFs ? 'block' : 'none';
+  requestAnimationFrame(() => setTimeout(() => resizeGraph(isFs), 150));
 }
 </script>
 </body>
