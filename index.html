@@ -2330,9 +2330,10 @@ function resizeGraph() {
   if (!svgEl) return;
   const wrap = document.getElementById('net-wrap');
   const W = wrap.clientWidth;
-  const H = wrap.clientHeight || parseInt(svgEl.attr('height'));
+  const H = wrap.clientHeight > 100 ? wrap.clientHeight : parseInt(svgEl.attr('height'));
   svgEl.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
-  if (sim) sim.force('center', d3.forceCenter(W / 2, H / 2)).alpha(0.3).restart();
+  // ノード座標をリセットして新サイズで再描画
+  render();
 }
 
 function enterFullscreen() {
@@ -2344,9 +2345,9 @@ function enterFullscreen() {
     // iOS fallback
     el.classList.add('fake-fullscreen');
     document.body.style.overflow = 'hidden';
-    setTimeout(resizeGraph, 100);
     document.getElementById('fs-btn').style.display = 'none';
     document.getElementById('fs-exit-btn').style.display = 'block';
+    requestAnimationFrame(() => setTimeout(resizeGraph, 150));
   }
 }
 function exitFullscreen() {
@@ -2354,9 +2355,9 @@ function exitFullscreen() {
   if (el.classList.contains('fake-fullscreen')) {
     el.classList.remove('fake-fullscreen');
     document.body.style.overflow = '';
-    setTimeout(resizeGraph, 100);
     document.getElementById('fs-btn').style.display = '';
     document.getElementById('fs-exit-btn').style.display = 'none';
+    requestAnimationFrame(() => setTimeout(resizeGraph, 150));
     return;
   }
   const ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
@@ -2369,7 +2370,8 @@ function onFsChange() {
   const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
   document.getElementById('fs-btn').style.display = isFs ? 'none' : '';
   document.getElementById('fs-exit-btn').style.display = isFs ? 'block' : 'none';
-  setTimeout(resizeGraph, 100);
+  // DOMが確実に更新されてからリサイズ＆再描画
+  requestAnimationFrame(() => setTimeout(resizeGraph, 150));
 }
 </script>
 </body>
