@@ -1147,7 +1147,7 @@
     見たことのないアイコンの人をチェックしてみてね。
   </p>
   <div class="nodelist-wrap">
-    <button class="nodelist-toggle-btn" onclick="toggleNodeList(this)">相関図に載ってる人を一覧で見る ▼</button>
+    <button class="nodelist-toggle-btn" onclick="toggleNodeList(this)">相関図に載っている人を一覧で見る ▼</button>
     <div id="nodelist-body">
       <div class="nodelist-grid" id="nodelist-grid"></div>
     </div>
@@ -2291,7 +2291,7 @@ function toggleNodeList(btn) {
   const open = body.style.display === 'block';
   if (open) {
     body.style.display = 'none';
-    btn.textContent = '相関図に載ってる人を一覧で見る ▼';
+    btn.textContent = '相関図に載っている人を一覧で見る ▼';
   } else {
     renderNodeList();
     body.style.display = 'block';
