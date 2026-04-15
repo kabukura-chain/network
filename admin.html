@@ -481,12 +481,16 @@ function makeCodesForUser(handle, depth) {
 function toGraph(blocks) {
   const nm = new Map();
   const banned = new Set(DB.banned || []);
-  const addNode = (id, handle, reg) => {
-    if (!nm.has(id) && !banned.has(id)) nm.set(id, { id, handle, reg });
-  };
-  blocks.filter(b => !banned.has(b.id)).forEach(b => {
-    addNode(b.id, b.handle, true);
-    b.recs.filter(r => !banned.has(r)).forEach(r => addNode(r, r, false));
+  const filtered = blocks.filter(b => !banned.has(b.id));
+  // Pass1: 登録者を全員「緑」で先に登録
+  filtered.forEach(b => {
+    if (!nm.has(b.id)) nm.set(b.id, { id: b.id, handle: b.handle, reg: true });
+  });
+  // Pass2: recsを処理（未登録者のみ「青」）
+  filtered.forEach(b => {
+    b.recs.filter(r => !banned.has(r)).forEach(r => {
+      if (!nm.has(r)) nm.set(r, { id: r, handle: r, reg: false });
+    });
   });
   return { nodes: [...nm.values()] };
 }

@@ -1565,13 +1565,15 @@ function toGraph(blocks) {
   const nm = new Map();
   const links = [];
   const banned = new Set(DB.banned || []);
-  const addNode = (id, handle, reg) => {
-    if (!nm.has(id) && !banned.has(id)) nm.set(id, { id, handle, reg, deg: 0, inDeg: 0 });
-  };
-  blocks.filter(b => !banned.has(b.id)).forEach(b => {
-    addNode(b.id, b.handle, true);
+  const filtered = blocks.filter(b => !banned.has(b.id));
+  // Pass1: 登録者を全員「緑」で先に登録（配列順序に関係なく緑を確定）
+  filtered.forEach(b => {
+    if (!nm.has(b.id)) nm.set(b.id, { id: b.id, handle: b.handle, reg: true, deg: 0, inDeg: 0 });
+  });
+  // Pass2: recsを処理（未登録者のみ「青」で追加）
+  filtered.forEach(b => {
     b.recs.filter(r => !banned.has(r)).forEach(r => {
-      addNode(r, r, false);
+      if (!nm.has(r)) nm.set(r, { id: r, handle: r, reg: false, deg: 0, inDeg: 0 });
       nm.get(b.id).deg++;
       nm.get(r).inDeg++;
       links.push({ source: b.id, target: r });
