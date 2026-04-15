@@ -944,7 +944,7 @@
       line-height: 1.9;
       padding: 12px 14px;
       resize: none;
-      min-height: 180px;
+      min-height: 360px;
       letter-spacing: 0.5px;
       margin-bottom: 8px;
     }
@@ -1978,6 +1978,7 @@ function closeCodeModal() {
 
 /* ── 管理者コードパネル ── */
 function openCodePanel() {
+  if (sim) sim.stop(); // グラフシミュレーション停止で管理画面を軽くする
   const maxDepth = (DB.settings && DB.settings.maxDepth) || 4;
   document.getElementById('cp-depth').value = maxDepth;
   document.getElementById('cp-generated').textContent = '';
@@ -1988,6 +1989,7 @@ function openCodePanel() {
 
 function closeCodePanel() {
   document.getElementById('code-panel-modal').style.display = 'none';
+  if (sim) sim.restart(); // グラフシミュレーション再開
 }
 
 function saveMaxDepth() {
@@ -2012,10 +2014,32 @@ function adminGenerateCode() {
 
 function showDmTemplate(code) {
   const tmpl =
-`【株クラ X Network 招待コード】
+`さん！
+お久しぶりです🙏😙
+めちゃしょーもないトレーダー図鑑サイトを作ったんですよ。
+お遊びなんですけど、良かったら参加してみてくれませんかー？
+
+という微妙なお誘いです。
+あえて怪しくサイトを作ったので、嫌だよ！w
+と、なるかもしれませんが、良かったら暇つぶしトレーダー
+図鑑に参加してください〜🙇🏽‍♂️💦
+
+無理ー！ということでしたら既読スルーで大丈夫です➰😵
+突然のDM失礼ぶっこきました。
+
+以下コピペですみません🙏
+
+【株クラ X 図鑑Network 招待コード】
 
 株クラ界隈の信頼できるアカウントだけがつながる
 招待制ネットワークに招待します！
+☆おもしろポイント
+アイコンが推薦でつながるので、
+「あの人はあの人を推薦したのか～」とか
+「あの人とつながってるけど、この人見たことない」見てみよ
+とか「こことここつながってるの！？」とか
+「この人とこの人がつながってるの意外だな～」
+などの図鑑の楽しみ方ができます。
 
 ▼ 招待コード（1回限り有効）
 ${code}
@@ -2028,11 +2052,37 @@ https://kabukura-chain.github.io/network/
 2. 招待コードを入力
 3. あなたの@ハンドルと
    信頼できる株クラ仲間を1〜3人入力して登録
+※すでに登録（相関図に表示）されてる人でもOK！
+その人とのつながりの線がアイコンで結びつきます。
+
 4. 登録完了後、あなたにも3枚の招待コードが届きます
+【ここでいきなり閉じるボタン押して閉じない
+でください。コードをスクショかメモ帳にでも
+保存してから閉じてね。再表示無しなので。】
 5. 紹介した仲間にDMでコードを渡してバトンを繋いでください
 
+※ツイートしますか？ってのはリプ巻き込み事故みたいな感じ
+がするので、一応設定はしたけど微妙なら無視してね！
+
+【補足】
+このコードが届く→自分と推薦の３人のＩＤを登録する
+相関図に登録の直後に表示される（ページ更新してね）
+（鍵アカの人は自分が登録→表示・人に推薦される→仮アイコン）
+
+登録した人→自分ＩＤ＝アイコンに登録自分＝緑枠表示アイコン
+推薦で表示される人→気づいてない→青枠表示アイコン
+※推薦された人は表示されてることに気づいてないので、推薦した
+よ！よかったら見てみてね！
+
+ついでに登録もしちゃう？する！→なら３つ残ってる招待コードの
+１つを使ってこのメッセージをコピペして、登録コードだけ書き換
+えて送ってあげてね！という仕組みです。
+
 ▼ 仕組みの詳細
-https://kabukura-chain.github.io/network/about.html`;
+https://kabukura-chain.github.io/network/about.html
+
+クレームや削除依頼はむらやんツイッターのＤＭまでどうぞ！
+https://x.com/cadillac600`;
 
   document.getElementById('cp-dm-text').value = tmpl;
   document.getElementById('cp-dm-section').style.display = 'block';
