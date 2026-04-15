@@ -1666,6 +1666,23 @@ function toGraph(blocks) {
 ================================================================ */
 const R = 26; // node radius
 let sim, svgEl, gEl, normalH = null;
+let pulseTimer = null;
+
+// シミュレーション収束後、定期的に小さな揺らぎを与える
+function schedulePulse() {
+  clearTimeout(pulseTimer);
+  pulseTimer = setTimeout(() => {
+    if (!sim) return;
+    // 各ノードにランダムな微小速度を加えてから再起動
+    sim.nodes().forEach(n => {
+      if (!n.fx) {
+        n.vx += (Math.random() - 0.5) * 1.2;
+        n.vy += (Math.random() - 0.5) * 1.2;
+      }
+    });
+    sim.alpha(0.06).restart();
+  }, 5500);
+}
 
 // Color palette per node
 const LEGEND_MIN = 5;
@@ -1758,10 +1775,10 @@ function render() {
   const nodeG = ng.selectAll('g.nd').data(nodes).enter().append('g').attr('class', 'nd')
     .style('cursor', 'pointer')
     .call(d3.drag()
-      .on('start', (e, d) => { dragMoved = false; if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('start', (e, d) => { dragMoved = false; clearTimeout(pulseTimer); if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
       .on('drag',  (e, d) => { dragMoved = true; d.fx = e.x; d.fy = e.y; })
       .on('end',   (e, d) => {
-        if (!e.active) sim.alphaTarget(0);
+        if (!e.active) { sim.alphaTarget(0); schedulePulse(); }
         d.fx = null; d.fy = null;
         if (!dragMoved && !adminMode) {
           const a = document.createElement('a');
@@ -1934,6 +1951,9 @@ function render() {
            .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
     nodeG.attr('transform', d => `translate(${d.x},${d.y})`);
   });
+
+  // 収束後に次の揺らぎをスケジュール
+  sim.on('end', schedulePulse);
 }
 
 /* ── Tooltip ── */
