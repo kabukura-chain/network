@@ -60,6 +60,68 @@
       padding: 0 14px 48px;
     }
 
+    /* ── NODE LIST ── */
+    .nodelist-wrap {
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    .nodelist-toggle-btn {
+      display: inline-block;
+      color: var(--g);
+      font-size: 0.68rem;
+      letter-spacing: 3px;
+      border: 1px solid rgba(0,255,65,0.45);
+      background: rgba(0,0,0,0.7);
+      padding: 8px 20px;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 0 12px rgba(0,255,65,0.25), inset 0 0 8px rgba(0,255,65,0.05);
+      transition: all 0.2s;
+    }
+    .nodelist-toggle-btn:hover, .nodelist-toggle-btn:active {
+      background: rgba(0,255,65,0.1);
+      box-shadow: 0 0 28px rgba(0,255,65,0.6), inset 0 0 14px rgba(0,255,65,0.1);
+    }
+    #nodelist-body {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid rgba(0,255,65,0.25);
+      background: rgba(0,0,0,0.5);
+      padding: 12px;
+    }
+    .nodelist-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .nodelist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(0,255,65,0.3);
+      padding: 5px 8px;
+      background: rgba(0,5,0,0.6);
+    }
+    .nodelist-item img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,255,65,0.5);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .nodelist-item a {
+      color: var(--g);
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .nodelist-item a:hover { text-decoration: underline; }
+    @media (max-width: 480px) {
+      .nodelist-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── ABOUT LINK ── */
     .about-link {
       display: inline-block;
@@ -1084,6 +1146,12 @@
     あの人とこの人つながってるのか！？の新発見ができる。<br>
     見たことのないアイコンの人をチェックしてみてね。
   </p>
+  <div class="nodelist-wrap">
+    <button class="nodelist-toggle-btn" onclick="toggleNodeList(this)">相関図に載ってる人を一覧で見る ▼</button>
+    <div id="nodelist-body">
+      <div class="nodelist-grid" id="nodelist-grid"></div>
+    </div>
+  </div>
   <div class="net-wrap" id="net-wrap">
     <svg id="net-svg"></svg>
     <div id="tooltip"></div>
@@ -2215,6 +2283,42 @@ function addReport() {
   document.getElementById('r-me').value = '';
   document.getElementById('r-target').value = '';
   document.querySelectorAll('.reason-btn.selected').forEach(b => b.classList.remove('selected'));
+}
+
+/* ── 一覧表示 ── */
+function toggleNodeList(btn) {
+  const body = document.getElementById('nodelist-body');
+  const open = body.style.display === 'block';
+  if (open) {
+    body.style.display = 'none';
+    btn.textContent = '相関図に載ってる人を一覧で見る ▼';
+  } else {
+    renderNodeList();
+    body.style.display = 'block';
+    btn.textContent = '相関図に載ってる人を一覧で見る ▲';
+  }
+}
+
+function renderNodeList() {
+  const grid = document.getElementById('nodelist-grid');
+  const banned = new Set(DB.banned || []);
+  // 全ノードをアルファベット順でソート
+  const allHandles = new Set();
+  DB.blocks.filter(b => !banned.has(b.id)).forEach(b => {
+    allHandles.add(b.id);
+    b.recs.filter(r => !banned.has(r)).forEach(r => allHandles.add(r));
+  });
+  const sorted = [...allHandles].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  const fallback = (h) => `https://api.dicebear.com/7.x/pixel-art/png?seed=${encodeURIComponent(h)}&backgroundColor=0d1f0d&size=64`;
+  const xUrl = (h) => `https://x.com/${encodeURIComponent(h.replace(/^@/, ''))}`;
+  const avUrl = (h) => `https://unavatar.io/x/${encodeURIComponent(h.replace(/^@/, ''))}`;
+  grid.innerHTML = sorted.map(h => `
+    <div class="nodelist-item">
+      <a href="${xUrl(h)}" target="_blank" rel="noopener">
+        <img src="${avUrl(h)}" alt="@${h}" onerror="this.src='${fallback(h)}'">
+      </a>
+      <a href="${xUrl(h)}" target="_blank" rel="noopener">@${h}</a>
+    </div>`).join('');
 }
 
 function renderReports() {
