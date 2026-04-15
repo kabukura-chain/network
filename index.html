@@ -233,6 +233,70 @@
       text-shadow: 0 0 10px var(--g);
     }
 
+    /* ── SUGGEST ── */
+    .suggest-toggle {
+      display: block;
+      width: 100%;
+      background: rgba(0,170,255,0.06);
+      border: 1px dashed rgba(0,170,255,0.4);
+      color: #00aaff;
+      font-family: inherit;
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      padding: 8px 14px;
+      cursor: pointer;
+      text-align: left;
+      margin-bottom: 6px;
+      transition: background 0.2s;
+    }
+    .suggest-toggle:hover { background: rgba(0,170,255,0.12); }
+    .suggest-panel {
+      display: none;
+      border: 1px solid rgba(0,170,255,0.25);
+      background: rgba(0,5,15,0.7);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .suggest-note {
+      font-size: 0.62rem;
+      color: rgba(0,170,255,0.6);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .suggest-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .suggest-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid rgba(0,170,255,0.3);
+      background: rgba(0,10,20,0.8);
+      padding: 3px 6px;
+      font-size: 0.65rem;
+    }
+    .suggest-chip span { color: #7ad4ff; }
+    .suggest-chip .inDeg { color: rgba(0,170,255,0.45); font-size: 0.58rem; }
+    .suggest-add-btn {
+      background: rgba(0,170,255,0.15);
+      border: 1px solid rgba(0,170,255,0.4);
+      color: #00aaff;
+      font-family: inherit;
+      font-size: 0.6rem;
+      padding: 1px 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .suggest-add-btn:hover { background: rgba(0,170,255,0.3); }
+    .suggest-add-btn.added {
+      background: rgba(0,255,65,0.15);
+      border-color: rgba(0,255,65,0.4);
+      color: var(--g);
+      cursor: default;
+    }
+
     /* ── NETWORK ── */
     .net-wrap {
       position: relative;
@@ -1229,6 +1293,14 @@
       <input type="text" id="f-me" placeholder="＠あなたのハンドル または ハンドル" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="divider">─── おすすめ（1〜3人、@あり・なしどちらでもOK）───</div>
+    <!-- 推薦候補サジェスト -->
+    <button class="suggest-toggle" onclick="toggleSuggest(this)" type="button">
+      💡 ネットワーク内の人から選ぶ（推薦候補を見る）▼
+    </button>
+    <div class="suggest-panel" id="suggest-panel">
+      <p class="suggest-note">※ 推薦数の多い順に表示。「追加」で入力欄に自動入力されます。</p>
+      <div class="suggest-grid" id="suggest-grid"></div>
+    </div>
     <div class="field">
       <label>おすすめ 1人目</label>
       <input type="text" id="f-r1" placeholder="＠kabu_san_A または kabu_san_A" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -2283,6 +2355,84 @@ function addReport() {
   document.querySelectorAll('.reason-btn.selected').forEach(b => b.classList.remove('selected'));
 }
 
+/* ── 推薦候補サジェスト ── */
+function toggleSuggest(btn) {
+  const panel = document.getElementById('suggest-panel');
+  const open = panel.style.display === 'block';
+  if (open) {
+    panel.style.display = 'none';
+    btn.textContent = '💡 ネットワーク内の人から選ぶ（推薦候補を見る）▼';
+  } else {
+    renderSuggestGrid();
+    panel.style.display = 'block';
+    btn.textContent = '💡 ネットワーク内の人から選ぶ（推薦候補を見る）▲';
+  }
+}
+
+function renderSuggestGrid() {
+  const grid = document.getElementById('suggest-grid');
+  const banned = new Set(DB.banned || []);
+  // 全ノードを推薦数(inDeg)の多い順でソート
+  const { nodes } = toGraph(DB.blocks);
+  const sorted = nodes
+    .filter(n => !banned.has(n.id))
+    .sort((a, b) => (b.inDeg || 0) - (a.inDeg || 0));
+
+  const currentVals = () => [
+    document.getElementById('f-r1').value,
+    document.getElementById('f-r2').value,
+    document.getElementById('f-r3').value,
+  ].map(v => v.trim().toLowerCase().replace(/^@/, '')).filter(Boolean);
+
+  grid.innerHTML = '';
+  sorted.forEach(n => {
+    const chip = document.createElement('div');
+    chip.className = 'suggest-chip';
+    chip.dataset.handle = n.id;
+    const label = n.inDeg > 0 ? `<span class="inDeg">×${n.inDeg}</span>` : '';
+    chip.innerHTML = `<span>@${n.id}</span>${label}<button class="suggest-add-btn" onclick="addSuggestion('${n.id}', this)" type="button">追加</button>`;
+    grid.appendChild(chip);
+  });
+  refreshSuggestBtns();
+}
+
+function addSuggestion(handle, btn) {
+  const fields = ['f-r1','f-r2','f-r3'];
+  const norm = v => v.trim().toLowerCase().replace(/^@/, '');
+  // すでに入力済みチェック
+  for (const fid of fields) {
+    if (norm(document.getElementById(fid).value) === handle) {
+      toast(`@${handle} はすでに入力済みです`, false);
+      return;
+    }
+  }
+  // 空いている最初の欄に入力
+  for (const fid of fields) {
+    if (!document.getElementById(fid).value.trim()) {
+      document.getElementById(fid).value = handle;
+      btn.textContent = '✓';
+      btn.classList.add('added');
+      return;
+    }
+  }
+  toast('3人分すでに入力されています', false);
+}
+
+function refreshSuggestBtns() {
+  const norm = v => v.trim().toLowerCase().replace(/^@/, '');
+  const vals = ['f-r1','f-r2','f-r3'].map(fid => norm(document.getElementById(fid).value)).filter(Boolean);
+  document.querySelectorAll('.suggest-add-btn').forEach(btn => {
+    const chip = btn.closest('.suggest-chip');
+    if (!chip) return;
+    const h = chip.dataset.handle;
+    if (vals.includes(h)) {
+      btn.textContent = '✓'; btn.classList.add('added');
+    } else {
+      btn.textContent = '追加'; btn.classList.remove('added');
+    }
+  });
+}
+
 /* ── 一覧表示 ── */
 function toggleNodeList(btn) {
   const body = document.getElementById('nodelist-body');
@@ -2519,6 +2669,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     loading.style.display = 'none';
     initSVG();
     renderReports();
+    // 推薦入力欄の変化でサジェストボタン状態を更新
+    ['f-r1','f-r2','f-r3'].forEach(fid => {
+      document.getElementById(fid).addEventListener('input', () => {
+        if (document.getElementById('suggest-panel').style.display === 'block') refreshSuggestBtns();
+      });
+    });
 
     // リアルタイム同期（誰かが登録・通報したら全員に即反映）
     DB_REF.on('value', snap => {
