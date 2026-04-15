@@ -1330,6 +1330,11 @@
     </div>
 
     <div class="cp-section">
+      <p class="cp-label">// 青アイコン → 緑に変更（推薦のみで表示されてる人）</p>
+      <div id="cp-blue-list"></div>
+    </div>
+
+    <div class="cp-section">
       <p class="cp-label">// コード一覧</p>
       <div id="cp-code-list" style="overflow-x:auto"></div>
     </div>
@@ -1552,10 +1557,10 @@ function initSVG() {
   lm.append('feMergeNode').attr('in', 'SourceGraphic');
 
   // Arrow marker
-  defs.append('marker').attr('id', 'arr').attr('viewBox', '0 -4 8 8')
-    .attr('refX', R + 8).attr('refY', 0)
-    .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient', 'auto')
-    .append('path').attr('d', 'M0,-4L8,0L0,4').attr('fill', 'rgba(0,255,65,0.4)');
+  defs.append('marker').attr('id', 'arr').attr('viewBox', '0 -6 12 12')
+    .attr('refX', R + 12).attr('refY', 0)
+    .attr('markerWidth', 8).attr('markerHeight', 8).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-6L12,0L0,6').attr('fill', 'rgba(0,255,65,0.65)');
 
   // Zoom
   const zoom = d3.zoom().scaleExtent([0.25, 4])
@@ -1983,6 +1988,7 @@ function openCodePanel() {
   document.getElementById('cp-depth').value = maxDepth;
   document.getElementById('cp-generated').textContent = '';
   document.getElementById('cp-for-handle').value = '';
+  renderBlueList();
   renderCodeList();
   document.getElementById('code-panel-modal').style.display = 'flex';
 }
@@ -2103,6 +2109,45 @@ function copyDmText() {
     ta.select();
     document.execCommand('copy');
   });
+}
+
+function renderBlueList() {
+  const el = document.getElementById('cp-blue-list');
+  const registeredIds = new Set(DB.blocks.map(b => b.id));
+  const banned = new Set(DB.banned || []);
+  // recsに登場するが自分では登録していない人を収集
+  const blueSet = new Set();
+  DB.blocks.forEach(b => {
+    b.recs.forEach(r => {
+      if (!registeredIds.has(r) && !banned.has(r)) blueSet.add(r);
+    });
+  });
+  const blues = [...blueSet].sort();
+  if (blues.length === 0) {
+    el.innerHTML = '<p style="color:#1a4a1a;font-size:0.7rem">青アイコンの人はいません</p>';
+    return;
+  }
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">';
+  blues.forEach(id => {
+    html += `<div style="display:flex;align-items:center;gap:4px;background:#001a00;border:1px solid rgba(0,255,65,0.2);padding:4px 8px;font-size:0.7rem">
+      <span style="color:#00aaff;letter-spacing:1px">@${id}</span>
+      <button onclick="makeBlueGreen('${id}')" style="background:rgba(0,255,65,0.15);border:1px solid rgba(0,255,65,0.4);color:#00ff41;font-size:0.68rem;padding:2px 8px;cursor:pointer;font-family:inherit;letter-spacing:1px">→緑</button>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function makeBlueGreen(id) {
+  if (DB.blocks.find(b => b.id === id)) {
+    toast(`@${id} はすでに登録済みです`, false); return;
+  }
+  DB.blocks.push({ id, handle: id, recs: [], depth: 0, ts: Date.now(), manualReg: true });
+  save(DB);
+  render();
+  renderBlueList();
+  renderCodeList();
+  toast(`@${id} を緑に変更しました`);
 }
 
 function renderCodeList() {
