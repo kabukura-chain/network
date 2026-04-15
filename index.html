@@ -2517,8 +2517,8 @@ function renderNodeList() {
   grid.innerHTML = sorted.map(n => {
     const cls = n.reg ? 'nl-green' : 'nl-blue';
     const indegLabel = (n.inDeg || 0) > 0
-      ? `<span class="nl-indeg">→ ${n.inDeg}</span>`
-      : `<span class="nl-indeg" style="opacity:0.3">→ 0</span>`;
+      ? `<span class="nl-indeg">👍 ${n.inDeg}</span>`
+      : `<span class="nl-indeg" style="opacity:0.3">👍 0</span>`;
     return `<div class="nodelist-item ${cls}">
       <a href="${xUrl(n.id)}" target="_blank" rel="noopener">
         <img src="${avUrl(n.id)}" alt="@${n.id}" onerror="this.src='${fallback(n.id)}'">
