@@ -184,6 +184,38 @@
     .action-cell { white-space: nowrap; }
     .action-cell button { margin: 2px; }
 
+    /* ── ALL NODE TABLE ── */
+    .all-node-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.68rem;
+    }
+    .all-node-table th {
+      color: #669966;
+      border-bottom: 1px solid #1a3a1a;
+      padding: 6px 6px;
+      text-align: left;
+      letter-spacing: 1px;
+    }
+    .all-node-table td {
+      border-bottom: 1px solid #001500;
+      padding: 6px 6px;
+      vertical-align: middle;
+    }
+    .all-node-table tr:hover td { background: rgba(0,255,65,0.03); }
+    .status-green { color: #00ff41; font-weight: bold; letter-spacing: 1px; }
+    .status-blue  { color: #00aaff; font-weight: bold; letter-spacing: 1px; }
+    .btn-blue {
+      border-color: rgba(0,170,255,0.5);
+      color: #00aaff;
+    }
+    .btn-blue:hover { background: rgba(0,170,255,0.15); }
+    .btn-dim {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
+
     /* ── CODE TABLE ── */
     .code-table {
       width: 100%;
@@ -321,7 +353,7 @@
       <div id="cp-generated"></div>
     </div>
 
-    <!-- 3: DMテンプレート -->
+    <!-- 3: DMテンプレート + コード一覧 -->
     <div class="section" id="cp-dm-section" style="display:none">
       <p class="section-title">// DMテンプレート（そのままコピーして送れます）</p>
       <textarea id="cp-dm-text" readonly></textarea>
@@ -329,6 +361,9 @@
         <button class="btn" onclick="selectDmText()">全選択</button>
         <button class="btn" id="cp-copy-btn" onclick="copyDmText()">コピー</button>
       </div>
+      <!-- ① コード一覧をここに配置 -->
+      <p class="section-title" style="margin-top:18px">// コード一覧</p>
+      <div id="cp-code-list" style="overflow-x:auto"></div>
     </div>
 
     <!-- 4: 青→緑変換 -->
@@ -337,16 +372,16 @@
       <div id="cp-blue-list"></div>
     </div>
 
-    <!-- 5: 登録ユーザー管理 -->
+    <!-- 5: 全ノード管理（新規） -->
+    <div class="section">
+      <p class="section-title">// 登録ユーザー全表示管理（状態・変更・削除）</p>
+      <div id="all-node-list" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- 6: 登録ユーザー管理（推薦編集） -->
     <div class="section">
       <p class="section-title">// 登録ユーザー管理（削除・推薦編集）</p>
       <div id="user-list" style="overflow-x:auto"></div>
-    </div>
-
-    <!-- 6: コード一覧 -->
-    <div class="section">
-      <p class="section-title">// コード一覧</p>
-      <div id="cp-code-list" style="overflow-x:auto"></div>
     </div>
 
   </div><!-- /admin-content -->
@@ -634,6 +669,7 @@ function deleteBlock(id) {
   DB.blocks.forEach(b => { b.recs = b.recs.filter(r => r !== id); });
   if (DB.reports && DB.reports[id]) delete DB.reports[id];
   save(DB);
+  renderAllNodeList();
   renderUserList();
   renderBlueList();
   toast(`@${id} を削除しました`);
@@ -725,9 +761,72 @@ function closeEditModal() {
   editTargetId = null;
 }
 
+/* ── 全ノード管理テーブル ── */
+function renderAllNodeList() {
+  const el = document.getElementById('all-node-list');
+  const { nodes } = toGraph(DB.blocks);
+  if (nodes.length === 0) {
+    el.innerHTML = '<p style="color:#1a4a1a;font-size:0.7rem">ノードなし</p>';
+    return;
+  }
+  const sorted = [...nodes].sort((a, b) => a.id.toLowerCase().localeCompare(b.id.toLowerCase()));
+  let html = `<table class="all-node-table">
+    <tr><th>ハンドル</th><th>状態</th><th>アイコン状態変更</th><th>削除</th></tr>`;
+  sorted.forEach(n => {
+    const isGreen = n.reg;
+    const statusLabel = isGreen
+      ? '<span class="status-green">緑</span>'
+      : '<span class="status-blue">青</span>';
+    const toBlueBtn = `<button class="btn btn-blue${isGreen ? '' : ' btn-dim'}" style="font-size:0.62rem;padding:3px 8px" onclick="setNodeBlue('${n.id}')">青に変更</button>`;
+    const toGreenBtn = `<button class="btn${isGreen ? ' btn-dim' : ''}" style="font-size:0.62rem;padding:3px 8px" onclick="setNodeGreen('${n.id}')">緑に変更</button>`;
+    html += `<tr>
+      <td><a href="https://x.com/${n.id}" target="_blank" rel="noopener" style="color:var(--g);text-decoration:none">@${n.id}</a></td>
+      <td>${statusLabel}</td>
+      <td style="white-space:nowrap">${toGreenBtn}&nbsp;${toBlueBtn}</td>
+      <td><button class="btn btn-red" style="font-size:0.62rem;padding:3px 8px" onclick="confirmDeleteNode('${n.id}')">削除</button></td>
+    </tr>`;
+  });
+  html += '</table>';
+  el.innerHTML = html;
+}
+
+function setNodeGreen(id) {
+  if (DB.blocks.find(b => b.id === id)) { toast(`@${id} はすでに緑です`, false); return; }
+  DB.blocks.push({ id, handle: id, recs: [], depth: 0, ts: Date.now(), manualReg: true });
+  save(DB);
+  renderAllNodeList();
+  renderBlueList();
+  renderUserList();
+  toast(`@${id} を緑に変更しました`);
+}
+
+function setNodeBlue(id) {
+  if (!DB.blocks.find(b => b.id === id)) { toast(`@${id} はすでに青です`, false); return; }
+  // recs が残っている場合は確認
+  const block = DB.blocks.find(b => b.id === id);
+  const hasRecs = block && block.recs && block.recs.length > 0;
+  if (hasRecs) {
+    if (!confirm(`@${id} を青（未登録状態）に変更しますか？\n推薦リスト（${block.recs.join(', ')}）は失われます。`)) return;
+  }
+  DB.blocks = DB.blocks.filter(b => b.id !== id);
+  save(DB);
+  renderAllNodeList();
+  renderBlueList();
+  renderUserList();
+  toast(`@${id} を青に変更しました`);
+}
+
+function confirmDeleteNode(id) {
+  if (confirm(`@${id} を削除しますか？\n（この人を推薦している全ブロックからも削除されます）`)) {
+    deleteBlock(id);
+    renderAllNodeList();
+  }
+}
+
 /* ── 全体再描画 ── */
 function renderAll() {
   renderBlueList();
+  renderAllNodeList();
   renderUserList();
   renderCodeList();
   const maxDepth = (DB.settings && DB.settings.maxDepth) || 4;
