@@ -278,7 +278,13 @@
       font-size: 0.65rem;
     }
     .suggest-chip span { color: #7ad4ff; }
-    .suggest-chip .inDeg { color: rgba(0,170,255,0.45); font-size: 0.58rem; }
+    .suggest-chip .inDeg {
+      color: rgba(0,170,255,0.9);
+      font-size: 0.58rem;
+      background: rgba(0,100,180,0.2);
+      border: 1px solid rgba(0,170,255,0.25);
+      padding: 0 4px;
+    }
     .suggest-add-btn {
       background: rgba(0,170,255,0.15);
       border: 1px solid rgba(0,170,255,0.4);
@@ -1299,6 +1305,7 @@
     </button>
     <div class="suggest-panel" id="suggest-panel">
       <p class="suggest-note">※ 推薦数の多い順に表示。「追加」で入力欄に自動入力されます。</p>
+      <p id="suggest-count" style="font-size:0.68rem;color:rgba(0,170,255,0.8);letter-spacing:1px;margin-bottom:8px"></p>
       <div class="suggest-grid" id="suggest-grid"></div>
     </div>
     <div class="field">
@@ -2384,13 +2391,21 @@ function renderSuggestGrid() {
     document.getElementById('f-r3').value,
   ].map(v => v.trim().toLowerCase().replace(/^@/, '')).filter(Boolean);
 
+  // カウント表示
+  const countEl = document.getElementById('suggest-count');
+  const greenCount = sorted.filter(n => n.reg).length;
+  const blueCount  = sorted.filter(n => !n.reg).length;
+  countEl.innerHTML = `現在 <strong style="color:#00ff41;font-size:0.8rem">${greenCount}</strong> 人登録済み ／ <strong style="color:#00aaff;font-size:0.8rem">${blueCount}</strong> 人が推薦のみで表示中 ／ 合計 <strong style="color:#fff;font-size:0.8rem">${sorted.length}</strong> 人`;
+
   grid.innerHTML = '';
   sorted.forEach(n => {
     const chip = document.createElement('div');
     chip.className = 'suggest-chip';
     chip.dataset.handle = n.id;
-    const label = n.inDeg > 0 ? `<span class="inDeg">×${n.inDeg}</span>` : '';
-    chip.innerHTML = `<span>@${n.id}</span>${label}<button class="suggest-add-btn" onclick="addSuggestion('${n.id}', this)" type="button">追加</button>`;
+    const badge = n.inDeg > 0
+      ? `<span class="inDeg" title="推薦された回数">推薦${n.inDeg}</span>`
+      : '';
+    chip.innerHTML = `<span>@${n.id}</span>${badge}<button class="suggest-add-btn" onclick="addSuggestion('${n.id}', this)" type="button">追加</button>`;
     grid.appendChild(chip);
   });
   refreshSuggestBtns();
