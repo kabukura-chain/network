@@ -142,6 +142,24 @@
       color: rgba(0,170,255,0.6);
       border: 1px solid rgba(0,170,255,0.2);
     }
+    .nl-follow {
+      display: inline-block;
+      font-size: 0.58rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 2px 7px;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.5);
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+    }
+    .nl-follow:hover {
+      background: rgba(29,155,240,0.25);
+      border-color: rgba(29,155,240,0.6);
+      color: #fff;
+    }
     @media (max-width: 480px) {
       .nodelist-grid { grid-template-columns: 1fr; }
     }
@@ -2519,12 +2537,14 @@ function renderNodeList() {
     const indegLabel = (n.inDeg || 0) > 0
       ? `<span class="nl-indeg">👍 ${n.inDeg}</span>`
       : `<span class="nl-indeg" style="opacity:0.3">👍 0</span>`;
+    const followUrl = `https://x.com/intent/follow?screen_name=${encodeURIComponent(n.id)}`;
     return `<div class="nodelist-item ${cls}">
       <a href="${xUrl(n.id)}" target="_blank" rel="noopener">
         <img src="${avUrl(n.id)}" alt="@${n.id}" onerror="this.src='${fallback(n.id)}'">
       </a>
       <a class="nl-handle" href="${xUrl(n.id)}" target="_blank" rel="noopener">@${n.id}</a>
       ${indegLabel}
+      <a class="nl-follow" href="${followUrl}" target="_blank" rel="noopener">フォロー</a>
     </div>`;
   }).join('');
 }
