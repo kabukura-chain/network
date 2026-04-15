@@ -98,26 +98,50 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(0,255,65,0.3);
       padding: 5px 8px;
       background: rgba(0,5,0,0.6);
+    }
+    .nodelist-item.nl-green {
+      border: 1px solid rgba(0,255,65,0.3);
+    }
+    .nodelist-item.nl-blue {
+      border: 1px solid rgba(0,170,255,0.3);
+      background: rgba(0,5,15,0.6);
     }
     .nodelist-item img {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0,255,65,0.5);
       object-fit: cover;
       flex-shrink: 0;
     }
-    .nodelist-item a {
-      color: var(--g);
+    .nl-green img { border: 1.5px solid rgba(0,255,65,0.7); }
+    .nl-blue  img { border: 1.5px solid rgba(0,170,255,0.7); }
+    .nodelist-item .nl-handle {
+      flex: 1;
       font-size: 0.68rem;
       letter-spacing: 1px;
       text-decoration: none;
       word-break: break-all;
     }
-    .nodelist-item a:hover { text-decoration: underline; }
+    .nl-green .nl-handle { color: var(--g); }
+    .nl-blue  .nl-handle { color: #00aaff; }
+    .nodelist-item .nl-handle:hover { text-decoration: underline; }
+    .nodelist-item .nl-indeg {
+      font-size: 0.62rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .nl-green .nl-indeg {
+      color: rgba(0,255,65,0.6);
+      border: 1px solid rgba(0,255,65,0.2);
+    }
+    .nl-blue .nl-indeg {
+      color: rgba(0,170,255,0.6);
+      border: 1px solid rgba(0,170,255,0.2);
+    }
     @media (max-width: 480px) {
       .nodelist-grid { grid-template-columns: 1fr; }
     }
@@ -2484,24 +2508,25 @@ function toggleNodeList(btn) {
 
 function renderNodeList() {
   const grid = document.getElementById('nodelist-grid');
-  const banned = new Set(DB.banned || []);
-  // 全ノードをアルファベット順でソート
-  const allHandles = new Set();
-  DB.blocks.filter(b => !banned.has(b.id)).forEach(b => {
-    allHandles.add(b.id);
-    b.recs.filter(r => !banned.has(r)).forEach(r => allHandles.add(r));
-  });
-  const sorted = [...allHandles].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  // toGraph() から緑/青・inDeg を取得してアルファベット順でソート
+  const { nodes } = toGraph(DB.blocks);
+  const sorted = [...nodes].sort((a, b) => a.id.toLowerCase().localeCompare(b.id.toLowerCase()));
   const fallback = (h) => `https://api.dicebear.com/7.x/pixel-art/png?seed=${encodeURIComponent(h)}&backgroundColor=0d1f0d&size=64`;
   const xUrl = (h) => `https://x.com/${encodeURIComponent(h.replace(/^@/, ''))}`;
   const avUrl = (h) => `https://unavatar.io/x/${encodeURIComponent(h.replace(/^@/, ''))}`;
-  grid.innerHTML = sorted.map(h => `
-    <div class="nodelist-item">
-      <a href="${xUrl(h)}" target="_blank" rel="noopener">
-        <img src="${avUrl(h)}" alt="@${h}" onerror="this.src='${fallback(h)}'">
+  grid.innerHTML = sorted.map(n => {
+    const cls = n.reg ? 'nl-green' : 'nl-blue';
+    const indegLabel = (n.inDeg || 0) > 0
+      ? `<span class="nl-indeg">→ ${n.inDeg}</span>`
+      : `<span class="nl-indeg" style="opacity:0.3">→ 0</span>`;
+    return `<div class="nodelist-item ${cls}">
+      <a href="${xUrl(n.id)}" target="_blank" rel="noopener">
+        <img src="${avUrl(n.id)}" alt="@${n.id}" onerror="this.src='${fallback(n.id)}'">
       </a>
-      <a href="${xUrl(h)}" target="_blank" rel="noopener">@${h}</a>
-    </div>`).join('');
+      <a class="nl-handle" href="${xUrl(n.id)}" target="_blank" rel="noopener">@${n.id}</a>
+      ${indegLabel}
+    </div>`;
+  }).join('');
 }
 
 function renderReports() {
