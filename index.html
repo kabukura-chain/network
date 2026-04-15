@@ -2181,16 +2181,12 @@ function copyDmText() {
 
 function renderBlueList() {
   const el = document.getElementById('cp-blue-list');
-  const registeredIds = new Set(DB.blocks.map(b => b.id));
-  const banned = new Set(DB.banned || []);
-  // recsに登場するが自分では登録していない人を収集
-  const blueSet = new Set();
-  DB.blocks.forEach(b => {
-    b.recs.forEach(r => {
-      if (!registeredIds.has(r) && !banned.has(r)) blueSet.add(r);
-    });
-  });
-  const blues = [...blueSet].sort();
+  // toGraph() が実際に blue (reg:false) と判定したノードをそのまま使う
+  const { nodes } = toGraph(DB.blocks);
+  const blues = nodes
+    .filter(n => !n.reg)
+    .map(n => n.id)
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   if (blues.length === 0) {
     el.innerHTML = '<p style="color:#1a4a1a;font-size:0.7rem">青アイコンの人はいません</p>';
     return;
